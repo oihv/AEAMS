@@ -21,16 +21,19 @@ export default function SignInForm() {
       const result = await signIn("credentials", {
         email,
         password,
+        callbackUrl: "/dashboard",
         redirect: false,
       })
 
+      console.log("Sign in result:", result) // Debug log
+
       if (result?.error) {
         setError("Invalid credentials")
+      } else if (result?.ok) {
+        // Force a hard refresh to ensure session is properly loaded
+        window.location.href = "/dashboard"
       } else {
-        // Refresh the session
-        await getSession()
-        router.push("/dashboard")
-        router.refresh()
+        setError("Authentication failed. Please try again.")
       }
     } catch (error) {
       setError("An error occurred. Please try again.")

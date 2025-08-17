@@ -3,6 +3,10 @@ import { prisma } from "@/lib/prisma"
 
 export async function GET() {
   try {
+    console.log("🔍 Testing database connection...")
+    console.log("📍 DATABASE_URL exists:", !!process.env.DATABASE_URL)
+    console.log("🔐 NEXTAUTH_SECRET exists:", !!process.env.NEXTAUTH_SECRET)
+    
     // Test database connection by counting users
     const userCount = await prisma.user.count()
     const users = await prisma.user.findMany({
@@ -19,7 +23,9 @@ export async function GET() {
       message: `Database connected successfully`,
       userCount,
       users,
-      databasePath: process.env.DATABASE_URL
+      environment: process.env.NODE_ENV,
+      hasDbUrl: !!process.env.DATABASE_URL,
+      hasAuthSecret: !!process.env.NEXTAUTH_SECRET,
     })
   } catch (error) {
     console.error("Database connection error:", error)

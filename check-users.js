@@ -1,9 +1,10 @@
-import { prisma } from './lib/prisma.js'
+const { PrismaClient } = require('@prisma/client')
+const prisma = new PrismaClient()
 
 async function checkUsers() {
   try {
     console.log('🔍 Checking database connection...')
-    console.log('📍 Database URL:', process.env.DATABASE_URL)
+    console.log('📍 Database URL:', process.env.DATABASE_URL ? 'SET' : 'NOT SET')
     
     const userCount = await prisma.user.count()
     console.log('👥 Total users in database:', userCount)

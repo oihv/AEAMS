@@ -89,23 +89,51 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     })
   ],
   session: {
-    strategy: "jwt"
+    strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   pages: {
     signIn: "/auth/signin",
   },
   callbacks: {
     async jwt({ token, user }) {
+      console.log("🎫 JWT callback - token exists:", !!token)
+      console.log("🎫 JWT callback - user exists:", !!user)
+      
       if (user) {
+        console.log("👤 Adding user to token:", { id: user.id, email: user.email })
         token.id = user.id
       }
+      
+      console.log("🎫 Final token:", { id: token.id, email: token.email, exp: token.exp })
       return token
     },
     async session({ session, token }) {
-      if (session.user) {
+      console.log("🔐 Session callback - session exists:", !!session)
+      console.log("🔐 Session callback - token exists:", !!token)
+      
+      if (session.user && token) {
+        console.log("👤 Adding token ID to session:", token.id)
         session.user.id = token.id as string
       }
+      
+      console.log("🔐 Final session:", { 
+        user: session.user ? { id: session.user.id, email: session.user.email } : null,
+        expires: session.expires 
+      })
       return session
+    }
+  },
+  debug: process.env.NODE_ENV === "development",
+  logger: {
+    error: (error: Error) => {
+      console.error("🚨 NextAuth Error:", error)
+    },
+    warn: (code: string) => {
+      console.warn("⚠️ NextAuth Warning:", code)
+    },
+    debug: (code: string, metadata?: any) => {
+      console.log("🔍 NextAuth Debug:", code, metadata)
     }
   }
 })

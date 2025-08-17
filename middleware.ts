@@ -5,6 +5,14 @@ import { getToken } from "next-auth/jwt"
 export async function middleware(request: NextRequest) {
   console.log("🛡️ Middleware triggered for:", request.nextUrl.pathname)
   
+  // Debug cookies
+  const cookies = request.cookies.getAll()
+  console.log("🍪 Available cookies:", cookies.map(c => ({ name: c.name, hasValue: !!c.value })))
+  
+  // Check for NextAuth cookies specifically
+  const nextAuthCookies = cookies.filter(c => c.name.includes('next-auth') || c.name.includes('__Secure-next-auth'))
+  console.log("🔐 NextAuth cookies:", nextAuthCookies.map(c => ({ name: c.name, hasValue: !!c.value })))
+  
   // Use getToken instead of auth() to avoid Edge Runtime issues
   const token = await getToken({ 
     req: request,
@@ -12,7 +20,14 @@ export async function middleware(request: NextRequest) {
   })
   
   console.log("🔑 Token exists:", !!token)
-  console.log("🔐 NEXTAUTH_SECRET exists:", !!process.env.NEXTAUTH_SECRET)
+  if (token) {
+    console.log("🎫 Token details:", { email: token.email, id: token.id, exp: token.exp })
+  } else {
+    console.log("❌ No token found - checking reasons:")
+    console.log("   - NEXTAUTH_SECRET exists:", !!process.env.NEXTAUTH_SECRET)
+    console.log("   - NEXTAUTH_URL:", process.env.NEXTAUTH_URL)
+    console.log("   - Domain:", request.nextUrl.hostname)
+  }
   
   // Protected routes that require authentication
   const protectedRoutes = ['/dashboard']

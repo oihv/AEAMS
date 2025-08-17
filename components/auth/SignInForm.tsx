@@ -17,6 +17,8 @@ export default function SignInForm() {
     setIsLoading(true)
     setError("")
 
+    console.log("🔐 Starting sign in process for:", email)
+
     try {
       const result = await signIn("credentials", {
         email,
@@ -25,14 +27,18 @@ export default function SignInForm() {
         redirect: false,
       })
 
-      console.log("Sign in result:", result) // Debug log
+      console.log("🔍 Sign in result:", result) // Debug log
+      console.log("🍪 Document cookies:", document.cookie) // Check cookies
 
       if (result?.error) {
+        console.log("❌ Sign in error:", result.error)
         setError("Invalid credentials")
       } else if (result?.ok) {
+        console.log("✅ Sign in successful, redirecting...")
         // Force a hard refresh to ensure session is properly loaded
         window.location.href = "/dashboard"
       } else {
+        console.log("❓ Unknown sign in result:", result)
         setError("Authentication failed. Please try again.")
       }
     } catch (error) {

@@ -1,36 +1,287 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# EAEMS - Next.js Authentication System
 
-## Getting Started
+A modern full-stack authentication system built with Next.js 15, NextAuth.js v5, Prisma ORM, and SQLite database.
 
-First, run the development server:
+## 🚀 Features
 
+- **🔐 Complete Authentication System**: Sign up, sign in, sign out functionality
+- **🎨 Modern UI/UX**: Minimalist design with TailwindCSS and smooth animations
+- **🛡️ Secure**: Password hashing with bcryptjs, JWT sessions with NextAuth.js v5
+- **📊 Database Management**: SQLite database with Prisma ORM and Studio interface
+- **🔒 Protected Routes**: Middleware-based route protection
+- **⚡ Fast Development**: Built with Next.js 15 and Turbopack
+
+## 🛠️ Tech Stack
+
+- **Framework**: Next.js 15.4.6 with App Router
+- **Authentication**: NextAuth.js v5 (beta)
+- **Database**: SQLite with Prisma ORM
+- **Styling**: TailwindCSS v4
+- **Language**: TypeScript
+- **Security**: bcryptjs for password hashing
+
+## 📋 Prerequisites
+
+Before you begin, ensure you have installed:
+
+- **Node.js** (version 18.0 or later)
+- **npm** or **yarn** or **pnpm**
+- **Git**
+
+## ⚙️ Installation & Setup
+
+### 🚀 Quick Setup (Recommended)
+
+For the fastest setup, use our automated setup scripts:
+
+#### **Windows Users:**
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/CodeNewb13/EAEMS.git
+cd EAEMS
+setup.bat
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+#### **Mac/Linux Users:**
+```bash
+git clone https://github.com/CodeNewb13/EAEMS.git
+cd EAEMS
+chmod +x setup.sh
+./setup.sh
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+The setup script will automatically:
+- ✅ Check for Node.js and npm
+- ✅ Install all dependencies
+- ✅ Create `.env` file from template
+- ✅ Set up the database
+- ✅ Generate Prisma client
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 🛠️ Manual Setup (Alternative)
 
-## Learn More
+If you prefer to set up manually or the automated script doesn't work:
 
-To learn more about Next.js, take a look at the following resources:
+#### 1. Clone the Repository
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+git clone https://github.com/CodeNewb13/EAEMS.git
+cd EAEMS
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+#### 2. Install Dependencies
 
-## Deploy on Vercel
+```bash
+npm install
+# or
+yarn install
+# or
+pnpm install
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+#### 3. Environment Configuration
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Create a `.env` file in the root directory:
+
+```env
+# NextAuth.js Configuration
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=your_super_secret_key_here_make_it_long_and_random
+
+# Database Configuration
+DATABASE_URL="file:./prisma/dev.db"
+```
+
+> **Important**: Replace `your_super_secret_key_here_make_it_long_and_random` with a secure random string. You can generate one using:
+> ```bash
+> openssl rand -base64 32
+> ```
+
+#### 4. Database Setup
+
+Initialize the database and run migrations:
+
+```bash
+# Generate Prisma client
+npx prisma generate
+
+# Create and sync the database
+npx prisma db push
+```
+
+#### 5. Start the Development Servers
+
+#### Start the Next.js Application
+```bash
+npm run dev
+```
+The application will be available at: **http://localhost:3000**
+
+#### Start Prisma Studio (Database Interface)
+Open a new terminal and run:
+```bash
+npx prisma studio
+```
+Prisma Studio will be available at: **http://localhost:5555**
+
+## 🗂️ Project Structure
+
+```
+EAEMS/
+├── app/
+│   ├── auth/
+│   │   ├── signin/
+│   │   └── signup/
+│   ├── dashboard/
+│   ├── api/
+│   │   └── auth/
+│   ├── components/
+│   │   ├── SignInForm.tsx
+│   │   ├── SignUpForm.tsx
+│   │   └── AuthProvider.tsx
+│   ├── lib/
+│   │   ├── auth.ts
+│   │   └── prisma.ts
+│   └── middleware.ts
+├── prisma/
+│   ├── schema.prisma
+│   └── dev.db
+└── README.md
+```
+
+## 🔧 Configuration Details
+
+### Database Schema
+
+The application uses the following database models:
+
+- **User**: Store user information (id, name, email, password)
+- **Account**: OAuth account information
+- **Session**: User session management
+- **VerificationToken**: Email verification tokens
+
+### Authentication Flow
+
+1. **Registration**: Users can create accounts with email/password
+2. **Login**: Secure authentication with hashed passwords
+3. **Session Management**: JWT-based sessions with NextAuth.js
+4. **Route Protection**: Middleware protects authenticated routes
+
+### Protected Routes
+
+- `/dashboard` - Requires authentication
+- `/auth/*` - Redirects authenticated users to dashboard
+
+## 🚨 Troubleshooting
+
+### Database Issues
+
+If you encounter database connection errors:
+
+```bash
+# Stop all Node processes
+taskkill /F /IM node.exe
+
+# Remove existing database
+rm prisma/dev.db
+
+# Recreate database
+npx prisma db push
+
+# Restart servers
+npm run dev
+npx prisma studio
+```
+
+### Port Conflicts
+
+If ports 3000 or 5555 are in use:
+
+```bash
+# For Next.js on different port
+npm run dev -- -p 3001
+
+# For Prisma Studio on different port
+npx prisma studio --port 5556
+```
+
+## 📝 Available Scripts
+
+```bash
+npm run dev      # Start development server with Turbopack
+npm run build    # Build for production
+npm run start    # Start production server
+npm run lint     # Run ESLint
+```
+
+## 🎯 Usage
+
+### Creating a User Account
+
+1. Navigate to http://localhost:3000
+2. Click "Sign Up"
+3. Fill in your details (name, email, password)
+4. Submit the form
+5. You'll be redirected to the dashboard upon successful registration
+
+### Viewing Database
+
+1. Open Prisma Studio at http://localhost:5555
+2. Browse the `User` table to see registered users
+3. View other tables for session and account data
+
+### Accessing Protected Routes
+
+- Visit `/dashboard` - requires authentication
+- If not logged in, you'll be redirected to sign-in page
+- After authentication, you'll have access to protected content
+
+## 🔒 Security Features
+
+- **Password Hashing**: Uses bcryptjs with salt rounds
+- **JWT Sessions**: Secure session management
+- **CSRF Protection**: Built-in NextAuth.js protection
+- **Environment Variables**: Sensitive data in `.env`
+- **Route Protection**: Middleware-based access control
+
+## 🚀 Deployment
+
+### Environment Variables for Production
+
+```env
+NEXTAUTH_URL=https://yourdomain.com
+NEXTAUTH_SECRET=your_production_secret_key
+DATABASE_URL="file:./prisma/prod.db"
+```
+
+### Build Commands
+
+```bash
+npm run build
+npm run start
+```
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature-name`
+3. Commit your changes: `git commit -m 'Add some feature'`
+4. Push to the branch: `git push origin feature-name`
+5. Open a pull request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## 👥 Authors
+
+- **CodeNewb13** - *Initial work* - [GitHub](https://github.com/CodeNewb13)
+
+## 🙏 Acknowledgments
+
+- Next.js team for the amazing framework
+- NextAuth.js for authentication solutions
+- Prisma for the excellent ORM
+- TailwindCSS for styling capabilities
+
+---
+
+**Happy Coding! 🎉**

@@ -1,13 +1,19 @@
 {
-  "name": "nextjs",
-  "version": "0.1.0",
+  "name": "aeams",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "db:studio": "prisma studio",
+    "db:reset": "prisma db push --force-reset",
+    "health": "node -e \"console.log('Node:', process.version); console.log('Env vars loaded:', {NEXTAUTH_SECRET: !!process.env.NEXTAUTH_SECRET, DATABASE_URL: !!process.env.DATABASE_URL})\"",
+    "env:check": "node -e \"console.log('Environment Check:'); console.log('NEXTAUTH_SECRET:', !!process.env.NEXTAUTH_SECRET); console.log('DATABASE_URL:', !!process.env.DATABASE_URL); console.log('NEXTAUTH_URL:', process.env.NEXTAUTH_URL || 'NOT SET')\""
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.10.0",

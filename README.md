@@ -2,6 +2,13 @@
 
 A modern full-stack authentication system built with Next.js 15, NextAuth.js v5, Prisma ORM, and PostgreSQL database.
 
+## 📚 Quick Navigation
+
+- 🚀 [Quick Start](./QUICKSTART.md) - Get running in 5 minutes
+- 🔧 [Troubleshooting](./TROUBLESHOOTING.md) - Common issues & solutions  
+- 📤 [Deployment Guide](./DEPLOYMENT.md) - Production deployment
+- 🤝 [Contributing](./CONTRIBUTING.md) - How to contribute
+
 ## 🚀 Features
 
 - **🔐 Complete Authentication System**: Sign up, sign in, sign out functionality
@@ -15,7 +22,7 @@ A modern full-stack authentication system built with Next.js 15, NextAuth.js v5,
 
 - **Framework**: Next.js 15.4.6 with App Router
 - **Authentication**: NextAuth.js v5 (beta)
-- **Database**: SQLite with Prisma ORM
+- **Database**: PostgreSQL with Prisma ORM (Supabase recommended)
 - **Styling**: TailwindCSS v4
 - **Language**: TypeScript
 - **Security**: bcryptjs for password hashing
@@ -126,25 +133,37 @@ Prisma Studio will be available at: **http://localhost:5555**
 
 ```
 EAEMS/
-├── app/
-│   ├── auth/
-│   │   ├── signin/
-│   │   └── signup/
-│   ├── dashboard/
-│   ├── api/
-│   │   └── auth/
-│   ├── components/
-│   │   ├── SignInForm.tsx
-│   │   ├── SignUpForm.tsx
-│   │   └── AuthProvider.tsx
-│   ├── lib/
-│   │   ├── auth.ts
-│   │   └── prisma.ts
-│   └── middleware.ts
-├── prisma/
-│   ├── schema.prisma
-│   └── dev.db
-└── README.md
+├── 📁 app/                    # Next.js App Router
+│   ├── 🔐 auth/              # Authentication pages
+│   │   ├── signin/           # Sign in page
+│   │   └── signup/           # Sign up page
+│   ├── 📊 dashboard/         # Protected dashboard
+│   ├── 🔌 api/               # API routes
+│   │   ├── auth/             # NextAuth.js endpoints
+│   │   ├── health/           # Health check
+│   │   ├── test-db/          # Database test
+│   │   └── ...               # Other API routes
+│   ├── globals.css           # Global styles
+│   ├── layout.tsx            # Root layout
+│   └── page.tsx              # Home page
+├── 🧩 components/            # Reusable React components
+│   ├── auth/                 # Authentication components
+│   └── UserInfo.tsx          # User information display
+├── 📚 lib/                   # Utility libraries
+│   └── prisma.ts             # Database client
+├── 🗄️ prisma/                # Database schema & config
+│   └── schema.prisma         # Prisma schema
+├── 🎨 types/                 # TypeScript type definitions
+│   └── next-auth.d.ts        # NextAuth.js types
+├── ⚙️ auth.ts                # Authentication configuration
+├── 🛡️ middleware.ts          # Route protection middleware
+├── 📋 package.json           # Dependencies & scripts
+├── 🔧 setup.bat/.sh          # Automated setup scripts
+├── 📖 README.md              # This file
+├── 🚀 QUICKSTART.md          # Quick setup guide
+├── 🔧 TROUBLESHOOTING.md     # Common issues & solutions
+├── 📤 DEPLOYMENT.md          # Production deployment guide
+└── 🤝 CONTRIBUTING.md        # Contribution guidelines
 ```
 
 ## 🔧 Configuration Details

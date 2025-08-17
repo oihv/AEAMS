@@ -43,12 +43,19 @@ echo ✅ Dependencies installed successfully
 REM Check for .env file
 if not exist ".env" (
     echo.
-    echo ⚙️ Creating .env file...
-    copy .env.example .env >nul
-    echo ✅ .env file created from .env.example
-    echo ⚠️  Please edit .env file and add your NEXTAUTH_SECRET
-    echo    You can generate a secret with: openssl rand -base64 32
-    echo    Or use an online generator if openssl is not available
+    if exist ".env.example" (
+        echo ⚙️ Creating .env file...
+        copy .env.example .env >nul
+        echo ✅ .env file created from .env.example
+        echo ⚠️  Please edit .env file and add your NEXTAUTH_SECRET
+        echo    You can generate a secret with: openssl rand -base64 32
+        echo    Or use an online generator if openssl is not available
+    ) else (
+        echo ⚠️  .env.example not found. Please create .env manually with:
+        echo    NEXTAUTH_URL=http://localhost:3000
+        echo    NEXTAUTH_SECRET=your_secret_here
+        echo    DATABASE_URL=your_database_url_here
+    )
 ) else (
     echo ✅ .env file already exists
 )

@@ -1,13 +1,13 @@
 # EAEMS - Next.js Authentication System
 
-A modern full-stack authentication system built with Next.js 15, NextAuth.js v5, Prisma ORM, and SQLite database.
+A modern full-stack authentication system built with Next.js 15, NextAuth.js v5, Prisma ORM, and PostgreSQL database.
 
 ## 🚀 Features
 
 - **🔐 Complete Authentication System**: Sign up, sign in, sign out functionality
 - **🎨 Modern UI/UX**: Minimalist design with TailwindCSS and smooth animations
 - **🛡️ Secure**: Password hashing with bcryptjs, JWT sessions with NextAuth.js v5
-- **📊 Database Management**: SQLite database with Prisma ORM and Studio interface
+- **📊 Database Management**: PostgreSQL database with Prisma ORM and Supabase hosting
 - **🔒 Protected Routes**: Middleware-based route protection
 - **⚡ Fast Development**: Built with Next.js 15 and Turbopack
 

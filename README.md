@@ -244,13 +244,28 @@ npm run lint     # Run ESLint
 
 ## 🚀 Deployment
 
-### Environment Variables for Production
+## 🚀 Deployment
 
-```env
-NEXTAUTH_URL=https://yourdomain.com
-NEXTAUTH_SECRET=your_production_secret_key
-DATABASE_URL="file:./prisma/prod.db"
-```
+**Note**: SQLite doesn't work on serverless platforms like Vercel. For production deployment, you need a cloud database.
+
+### Quick Vercel Deployment:
+
+1. **Set up a cloud database** (Supabase PostgreSQL recommended)
+2. **Update environment variables** in Vercel dashboard:
+   ```env
+   NEXTAUTH_URL=https://your-app.vercel.app
+   NEXTAUTH_SECRET=your_production_secret_key
+   DATABASE_URL="postgresql://postgres:password@host:5432/postgres"
+   ```
+3. **Update schema.prisma** for PostgreSQL:
+   ```prisma
+   datasource db {
+     provider = "postgresql"
+     url      = env("DATABASE_URL")
+   }
+   ```
+
+📖 **Full deployment guide**: See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed instructions.
 
 ### Build Commands
 

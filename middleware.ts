@@ -1,9 +1,13 @@
-import { auth } from "@/auth"
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
+import { getToken } from "next-auth/jwt"
 
 export async function middleware(request: NextRequest) {
-  const session = await auth()
+  // Use getToken instead of auth() to avoid Edge Runtime issues
+  const token = await getToken({ 
+    req: request,
+    secret: process.env.NEXTAUTH_SECRET 
+  })
   
   // Protected routes that require authentication
   const protectedRoutes = ['/dashboard']
@@ -14,7 +18,7 @@ export async function middleware(request: NextRequest) {
   )
   
   // If trying to access a protected route without authentication
-  if (isProtectedRoute && !session) {
+  if (isProtectedRoute && !token) {
     return NextResponse.redirect(new URL('/auth/signin', request.url))
   }
   
@@ -24,7 +28,7 @@ export async function middleware(request: NextRequest) {
     request.nextUrl.pathname.startsWith(route)
   )
   
-  if (isAuthRoute && session) {
+  if (isAuthRoute && token) {
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
   

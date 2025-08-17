@@ -1,0 +1,8 @@
+Contact: mailto:your-email@example.com
+Expires: 2025-12-31T23:59:59.000Z
+Preferred-Languages: en
+Canonical: https://nextjs-lilac-theta-57.vercel.app/.well-known/security.txt
+
+# This is a legitimate authentication system
+# Built with Next.js, NextAuth, and Supabase
+# Source code: https://github.com/CodeNewb13/AEAMS

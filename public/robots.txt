@@ -1,0 +1,19 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /auth/
+Disallow: /_next/
+Disallow: /dashboard/
+
+# Allow specific pages
+Allow: /api/health
+
+# Security and debugging endpoints should not be indexed
+Disallow: /api/test-db
+Disallow: /api/debug-auth
+Disallow: /api/supabase-health
+Disallow: /api/env-check
+Disallow: /api/auth-status
+Disallow: /api/security-audit
+
+Sitemap: https://nextjs-lilac-theta-57.vercel.app/sitemap.xml

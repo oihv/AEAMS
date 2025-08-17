@@ -17,7 +17,7 @@ export default async function Home() {
               </svg>
             </div>
             <h1 className="text-3xl font-light text-gray-900 tracking-tight mb-3">
-              Welcome to <span className="font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">EAEMS</span>
+              Welcome to <span className="font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">AEAMS</span>
             </h1>
             <p className="text-gray-500 text-sm font-light leading-relaxed">
               Authentication Management System

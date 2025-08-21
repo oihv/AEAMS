@@ -17,7 +17,7 @@ export async function GET() {
   let jwtTest = 'UNKNOWN'
   try {
     // This simulates what NextAuth does internally
-    const crypto = require('crypto')
+    const crypto = await import('crypto')
     if (process.env.NEXTAUTH_SECRET) {
       const testPayload = JSON.stringify({ test: 'data', iat: Math.floor(Date.now() / 1000) })
       const signature = crypto
@@ -28,7 +28,7 @@ export async function GET() {
     } else {
       jwtTest = 'NO_SECRET_CANNOT_SIGN'
     }
-  } catch (error) {
+  } catch {
     jwtTest = 'JWT_TEST_ERROR'
   }
 

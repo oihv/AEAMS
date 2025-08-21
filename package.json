@@ -21,6 +21,7 @@
     "@types/bcryptjs": "^2.4.6",
     "@types/pg": "^8.15.5",
     "bcryptjs": "^3.0.2",
+    "dotenv": "^17.2.1",
     "next": "15.4.6",
     "next-auth": "^5.0.0-beta.29",
     "pg": "^8.16.3",

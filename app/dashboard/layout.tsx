@@ -16,14 +16,14 @@ export default async function DashboardLayout({
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Dashboard Navigation */}
-      <nav className="bg-white shadow">
+      <nav className="bg-green-950 shadow">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
+          <div className="text-white flex justify-between h-16">
             <div className="flex items-center">
-              <h1 className="text-xl font-semibold text-gray-900">AEAMS Dashboard</h1>
+              <h1 className="text-xl font-semibold ">AEAMS Dashboard</h1>
             </div>
             <div className="flex items-center space-x-4">
-              <span className="text-gray-700">
+              <span>
                 Welcome, {session.user.name || session.user.email}!
               </span>
               <form

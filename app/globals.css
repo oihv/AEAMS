@@ -5,7 +5,16 @@
   --foreground: #171717;
 }
 
+@theme {
+  --color-leafy-1 : #132A13;
+  --color-leafy-2 : #31572C;
+  --color-leafy-3 : #4F772D;
+  --color-leafy-4 : #90A955;
+  --color-leafy-5 : #ECF39E;
+}
+
 @theme inline {
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);

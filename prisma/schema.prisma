@@ -51,8 +51,69 @@ model User {
   updatedAt     DateTime  @updatedAt @map("updated_at")
   accounts      Account[]
   sessions      Session[]
+  farms         Farm[]
 
   @@map("users")
+}
+
+model Farm {
+  id          String    @id @default(cuid())
+  name        String
+  location    String?
+  description String?
+  userId      String    @map("user_id")
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mainRod     MainRod?
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  @@map("farms")
+}
+
+model MainRod {
+  id            String         @id @default(cuid())
+  serialNumber  String         @unique @map("serial_number")
+  farmId        String         @unique @map("farm_id")
+  farm          Farm           @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  isConnected   Boolean        @default(false) @map("is_connected")
+  lastSeen      DateTime?      @map("last_seen")
+  secondaryRods SecondaryRod[]
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
+
+  @@map("main_rods")
+}
+
+model SecondaryRod {
+  id           String    @id @default(cuid())
+  serialNumber String    @unique @map("serial_number")
+  name         String?
+  location     String?
+  mainRodId    String    @map("main_rod_id")
+  mainRod      MainRod   @relation(fields: [mainRodId], references: [id], onDelete: Cascade)
+  isActive     Boolean   @default(true) @map("is_active")
+  lastSeen     DateTime? @map("last_seen")
+  readings     Reading[]
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  @@map("secondary_rods")
+}
+
+model Reading {
+  id             String       @id @default(cuid())
+  secondaryRodId String       @map("secondary_rod_id")
+  secondaryRod   SecondaryRod @relation(fields: [secondaryRodId], references: [id], onDelete: Cascade)
+  temperature    Float?
+  moisture       Float?
+  ph             Float?
+  conductivity   Float?
+  nitrogen       Float?       @map("n")
+  phosphorus     Float?       @map("p")
+  potassium      Float?       @map("k")
+  timestamp      DateTime     @default(now())
+
+  @@map("readings")
 }
 
 model VerificationToken {

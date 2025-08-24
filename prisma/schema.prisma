@@ -70,11 +70,21 @@ model Farm {
   @@map("farms")
 }
 
+model Config {
+  id        String @id @default(cuid())
+  key       String @unique
+  value     String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("config")
+}
+
 model MainRod {
   id            String         @id @default(cuid())
-  serialNumber  String         @unique @map("serial_number")
-  farmId        String         @unique @map("farm_id")
-  farm          Farm           @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  rodId         String         @unique @map("rod_id") // Production ID
+  farmId        String?        @unique @map("farm_id") // Optional - only set when bound to farm
+  farm          Farm?          @relation(fields: [farmId], references: [id], onDelete: SetNull)
   isConnected   Boolean        @default(false) @map("is_connected")
   lastSeen      DateTime?      @map("last_seen")
   secondaryRods SecondaryRod[]
@@ -85,17 +95,17 @@ model MainRod {
 }
 
 model SecondaryRod {
-  id           String    @id @default(cuid())
-  serialNumber String    @unique @map("serial_number")
-  name         String?
-  location     String?
-  mainRodId    String    @map("main_rod_id")
-  mainRod      MainRod   @relation(fields: [mainRodId], references: [id], onDelete: Cascade)
-  isActive     Boolean   @default(true) @map("is_active")
-  lastSeen     DateTime? @map("last_seen")
-  readings     Reading[]
-  createdAt    DateTime  @default(now()) @map("created_at")
-  updatedAt    DateTime  @updatedAt @map("updated_at")
+  id        String    @id @default(cuid())
+  rodId     String    @unique @map("rod_id") // Production ID
+  name      String?
+  location  String?
+  mainRodId String    @map("main_rod_id")
+  mainRod   MainRod   @relation(fields: [mainRodId], references: [id], onDelete: Cascade)
+  isActive  Boolean   @default(true) @map("is_active")
+  lastSeen  DateTime? @map("last_seen")
+  readings  Reading[]
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
 
   @@map("secondary_rods")
 }

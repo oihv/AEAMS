@@ -12,15 +12,16 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { farmId, serialNumber } = await request.json()
+    const { farmId, rodId } = await request.json()
 
-    if (!farmId || !serialNumber) {
+    if (!farmId || !rodId) {
       return NextResponse.json(
-        { error: "Farm ID and serial number are required" },
+        { error: "Farm ID and rod ID are required" },
         { status: 400 }
       )
     }
 
+    // 1. Check if farm exists and belongs to user
     const farm = await prisma.farm.findUnique({
       where: { id: farmId },
       include: { user: true, mainRod: true }
@@ -40,22 +41,31 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const existingRod = await prisma.mainRod.findUnique({
-      where: { serialNumber }
+    // 2. Check if the rod exists in our production database
+    const mainRod = await prisma.mainRod.findUnique({
+      where: { rodId: rodId }
     })
 
-    // TODO: make it to check for rod availability in the RodInventory
-    if (existingRod) {
+    if (!mainRod) {
       return NextResponse.json(
-        { error: "Rod with this serial number is already registered" },
+        { error: "Rod ID not found in our system. Please check the rod ID." },
+        { status: 404 }
+      )
+    }
+
+    // 3. Check if rod is already bound to another farm
+    if (mainRod.farmId) {
+      return NextResponse.json(
+        { error: "This rod is already connected to another farm" },
         { status: 400 }
       )
     }
 
-    const mainRod = await prisma.mainRod.create({
+    // 4. Bind the rod to the farm
+    const updatedMainRod = await prisma.mainRod.update({
+      where: { rodId: rodId },
       data: {
-        serialNumber,
-        farmId,
+        farmId: farmId,
         isConnected: true,
         lastSeen: new Date(),
       },
@@ -66,7 +76,12 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       message: "Main rod connected successfully",
-      mainRod
+      mainRod: {
+        id: updatedMainRod.id,
+        rodId: updatedMainRod.rodId,
+        farmId: updatedMainRod.farmId,
+        isConnected: updatedMainRod.isConnected
+      }
     })
   } catch (error) {
     console.error("📡 Error connecting main rod:", error)

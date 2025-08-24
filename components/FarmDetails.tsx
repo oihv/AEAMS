@@ -1,19 +1,19 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import MainRodConnection from "@/components/MainRodConnection"
 import RodCard from "@/components/RodCard"
 
 interface FarmDetailsProps {
-  farm: {
+  initialFarm: {
     id: string
     name: string
     location?: string | null
     description?: string | null
     mainRod?: {
       id: string
-      serialNumber: string
+      rodId: string
       isConnected: boolean
       lastSeen?: Date | null
       secondaryRods: Array<{
@@ -38,9 +38,44 @@ interface FarmDetailsProps {
   }
 }
 
-export default function FarmDetails({ farm }: FarmDetailsProps) {
+export default function FarmDetails({ initialFarm }: FarmDetailsProps) {
+  const [farm, setFarm] = useState(initialFarm)
   const [showMainRodConnection, setShowMainRodConnection] = useState(false)
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const [lastUpdated, setLastUpdated] = useState<Date>(new Date())
   const hasMainRod = !!farm.mainRod
+
+  // Function to fetch fresh farm data
+  const refreshFarmData = async () => {
+    if (isRefreshing) return // Prevent multiple simultaneous refreshes
+    
+    setIsRefreshing(true)
+    try {
+      const response = await fetch(`/api/farms/${farm.id}`)
+      if (response.ok) {
+        const data = await response.json()
+        setFarm(data.farm)
+        setLastUpdated(new Date())
+      }
+    } catch (error) {
+      console.error("Failed to refresh farm data:", error)
+    } finally {
+      setIsRefreshing(false)
+    }
+  }
+
+  // Auto-refresh every 30 seconds when main rod is connected
+  useEffect(() => {
+    if (!hasMainRod) return
+
+    const interval = setInterval(refreshFarmData, 30000) // 30 seconds
+    return () => clearInterval(interval)
+  }, [hasMainRod, farm.id])
+
+  // Manual refresh function
+  const handleManualRefresh = () => {
+    refreshFarmData()
+  }
 
   return (
     <div>
@@ -60,6 +95,22 @@ export default function FarmDetails({ farm }: FarmDetailsProps) {
             <p className="text-gray-600 mt-2">{farm.description}</p>
           )}
         </div>
+        
+        {hasMainRod && (
+          <div className="flex flex-col items-end gap-2">
+            <div className="text-xs text-gray-500">
+              Last updated: {lastUpdated.toLocaleTimeString()}
+            </div>
+            <button
+              onClick={handleManualRefresh}
+              disabled={isRefreshing}
+              className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-xl font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              <span className={`${isRefreshing ? 'animate-spin' : ''}`}>🔄</span>
+              {isRefreshing ? 'Refreshing...' : 'Refresh Data'}
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="bg-white rounded-xl border border-gray-200 p-6 mb-8">
@@ -78,8 +129,8 @@ export default function FarmDetails({ farm }: FarmDetailsProps) {
         {hasMainRod ? (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="text-center p-4 bg-gray-50 rounded-lg">
-              <div className="text-2xl font-bold text-gray-900">{farm.mainRod?.serialNumber}</div>
-              <div className="text-sm text-gray-600">Serial Number</div>
+              <div className="text-2xl font-bold text-gray-900">{farm.mainRod?.rodId}</div>
+              <div className="text-sm text-gray-600">Rod ID</div>
             </div>
             <div className="text-center p-4 bg-gray-50 rounded-lg">
               <div className={`text-2xl font-bold ${
@@ -109,9 +160,9 @@ export default function FarmDetails({ farm }: FarmDetailsProps) {
         <div className="bg-white rounded-xl border border-gray-200 p-6">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-semibold text-gray-900">Secondary Rods</h2>
-            <button className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl font-medium transition-colors">
-              + Add Rod
-            </button>
+            <div className="text-sm text-gray-500">
+              Auto-refreshing every 30 seconds
+            </div>
           </div>
 
           {farm.mainRod?.secondaryRods && farm.mainRod.secondaryRods.length > 0 ? (
@@ -137,7 +188,7 @@ export default function FarmDetails({ farm }: FarmDetailsProps) {
             <div className="text-center py-8">
               <div className="text-gray-400 text-6xl mb-4">🌱</div>
               <h3 className="text-lg font-medium text-gray-900 mb-2">No Secondary Rods</h3>
-              <p className="text-gray-600 mb-6">Add secondary rods to monitor different areas of your farm</p>
+              <p className="text-gray-600 mb-6">Secondary rods will appear here automatically when they connect to your main rod</p>
             </div>
           )}
         </div>
@@ -149,7 +200,7 @@ export default function FarmDetails({ farm }: FarmDetailsProps) {
           onClose={() => setShowMainRodConnection(false)}
           onConnected={() => {
             setShowMainRodConnection(false)
-            window.location.reload()
+            refreshFarmData() // Refresh instead of full page reload
           }}
         />
       )}

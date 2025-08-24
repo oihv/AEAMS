@@ -9,7 +9,7 @@ interface MainRodConnectionProps {
 }
 
 export default function MainRodConnection({ farmId, onClose, onConnected }: MainRodConnectionProps) {
-  const [serialNumber, setSerialNumber] = useState("")
+  const [rodId, setRodId] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
 
@@ -26,7 +26,7 @@ export default function MainRodConnection({ farmId, onClose, onConnected }: Main
         },
         body: JSON.stringify({
           farmId,
-          serialNumber: serialNumber.trim(),
+          rodId: rodId.trim(),
         }),
       })
 
@@ -65,8 +65,8 @@ export default function MainRodConnection({ farmId, onClose, onConnected }: Main
                 <ol className="text-sm text-blue-800 space-y-1">
                   <li>1. Power on your main rod device</li>
                   <li>2. Connect it to your farm&apos;s WiFi network</li>
-                  <li>3. Find the serial number on the device label</li>
-                  <li>4. Enter the serial number below</li>
+                  <li>3. Find the rod ID on the device label</li>
+                  <li>4. Enter the rod ID below</li>
                 </ol>
               </div>
             </div>
@@ -75,20 +75,20 @@ export default function MainRodConnection({ farmId, onClose, onConnected }: Main
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="serialNumber" className="block text-sm font-medium text-gray-700 mb-1">
-              Rod Serial Number *
+            <label htmlFor="rodId" className="block text-sm font-medium text-gray-700 mb-1">
+              Rod ID *
             </label>
             <input
-              id="serialNumber"
+              id="rodId"
               type="text"
-              value={serialNumber}
-              onChange={(e) => setSerialNumber(e.target.value)}
+              value={rodId}
+              onChange={(e) => setRodId(e.target.value)}
               required
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono"
-              placeholder="e.g., ROD-2024-001"
+              placeholder="e.g., MAIN-2024-001"
             />
             <p className="text-xs text-gray-500 mt-1">
-              Serial number is usually printed on a label on the device
+              Rod ID is usually printed on a label on the device
             </p>
           </div>
 
@@ -108,7 +108,7 @@ export default function MainRodConnection({ farmId, onClose, onConnected }: Main
             </button>
             <button
               type="submit"
-              disabled={isLoading || !serialNumber.trim()}
+              disabled={isLoading || !rodId.trim()}
               className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {isLoading ? "Connecting..." : "Connect Rod"}

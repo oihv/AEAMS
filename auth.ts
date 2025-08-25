@@ -4,6 +4,11 @@ import { prisma } from "@/lib/prisma"
 import Credentials from "next-auth/providers/credentials"
 import bcryptjs from "bcryptjs"
 
+interface PrismaError extends Error {
+  code?: string
+  meta?: unknown
+}
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
   providers: [
@@ -66,20 +71,21 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             email: user.email,
             name: user.name,
           }
-        } catch (error: any) {
+        } catch (error: unknown) {
+          const dbError = error as PrismaError
           console.error("💥 Supabase auth error:", {
-            name: error.name,
-            message: error.message,
-            code: error.code,
-            meta: error.meta
+            name: dbError.name,
+            message: dbError.message,
+            code: dbError.code,
+            meta: dbError.meta
           })
           
           // Specific Supabase error handling
-          if (error.code === 'P1001') {
+          if (dbError.code === 'P1001') {
             console.error("🚨 Cannot reach Supabase database - check network connection")
-          } else if (error.code === 'P1008') {
+          } else if (dbError.code === 'P1008') {
             console.error("🚨 Supabase connection timeout")
-          } else if (error.message?.includes('ENOTFOUND')) {
+          } else if (dbError.message?.includes('ENOTFOUND')) {
             console.error("🚨 DNS resolution failed for Supabase hostname")
           }
           
@@ -110,30 +116,27 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
   callbacks: {
     async jwt({ token, user }) {
-      console.log("🎫 JWT callback - token exists:", !!token)
-      console.log("🎫 JWT callback - user exists:", !!user)
-      
       if (user) {
-        console.log("👤 Adding user to token:", { id: user.id, email: user.email })
         token.id = user.id
+        token.email = user.email
       }
       
-      console.log("🎫 Final token:", { id: token.id, email: token.email, exp: token.exp })
+      if (process.env.NODE_ENV === 'development') {
+        console.log("🎫 JWT token updated:", { id: token.id, email: token.email })
+      }
       return token
     },
     async session({ session, token }) {
-      console.log("🔐 Session callback - session exists:", !!session)
-      console.log("🔐 Session callback - token exists:", !!token)
-      
       if (session.user && token) {
-        console.log("👤 Adding token ID to session:", token.id)
         session.user.id = token.id as string
+        session.user.email = token.email as string
       }
       
-      console.log("🔐 Final session:", { 
-        user: session.user ? { id: session.user.id, email: session.user.email } : null,
-        expires: session.expires 
-      })
+      if (process.env.NODE_ENV === 'development') {
+        console.log("🔐 Session updated:", { 
+          user: session.user ? { id: session.user.id, email: session.user.email } : null
+        })
+      }
       return session
     }
   },
@@ -143,10 +146,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       console.error("🚨 NextAuth Error:", error)
     },
     warn: (code: string) => {
-      console.warn("⚠️ NextAuth Warning:", code)
+      if (process.env.NODE_ENV === 'development') {
+        console.warn("⚠️ NextAuth Warning:", code)
+      }
     },
-    debug: (code: string, metadata?: any) => {
-      console.log("🔍 NextAuth Debug:", code, metadata)
+    debug: (code: string, metadata?: unknown) => {
+      if (process.env.NODE_ENV === 'development') {
+        console.log("🔍 NextAuth Debug:", code, metadata)
+      }
     }
   }
 })

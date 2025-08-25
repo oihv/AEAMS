@@ -37,6 +37,7 @@ export default function MainRodConnection({ farmId, onClose, onConnected }: Main
         setError(data.error || "Failed to connect main rod")
       }
     } catch (error) {
+      console.error("Rod connection error:", error)
       setError("An error occurred. Please try again.")
     } finally {
       setIsLoading(false)
@@ -75,7 +76,7 @@ export default function MainRodConnection({ farmId, onClose, onConnected }: Main
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="rodId" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="rodId" className="block text-sm font-medium text-gray-900 mb-1">
               Rod ID *
             </label>
             <input
@@ -84,7 +85,7 @@ export default function MainRodConnection({ farmId, onClose, onConnected }: Main
               value={rodId}
               onChange={(e) => setRodId(e.target.value)}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-gray-900 placeholder:text-gray-500"
               placeholder="e.g., MAIN-2024-001"
             />
             <p className="text-xs text-gray-500 mt-1">

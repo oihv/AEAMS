@@ -26,18 +26,7 @@ export async function GET() {
     const farms = await prisma.farm.findMany({
       where: { userId: user.id },
       include: {
-        mainRod: {
-          include: {
-            secondaryRods: {
-              include: {
-                readings: {
-                  orderBy: { timestamp: 'desc' },
-                  take: 1
-                }
-              }
-            }
-          }
-        }
+        mainRod: true
       }
     })
 
@@ -54,6 +43,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const session = await auth()
+    
     if (!session?.user?.email) {
       return NextResponse.json(
         { error: "Unauthorized" },
@@ -61,17 +51,21 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Find user in database
     const user = await prisma.user.findUnique({
-      where: { email: session.user.email }
+      where: { email: session.user.email },
+      select: { id: true, email: true, name: true }
     })
 
     if (!user) {
+      console.error("User not found in database:", session.user.email)
       return NextResponse.json(
         { error: "User not found" },
         { status: 404 }
       )
     }
 
+    // Get request data
     const { name, location, description } = await request.json()
 
     if (!name) {
@@ -81,24 +75,27 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Create the farm
     const farm = await prisma.farm.create({
       data: {
         name,
         location,
         description,
         userId: user.id,
-      },
-      include: {
-        mainRod: true
       }
     })
 
+    console.log("✅ Farm created:", { farmId: farm.id, name: farm.name, userId: user.id })
     return NextResponse.json({
       message: "Farm created successfully",
       farm
     })
   } catch (error) {
-    console.error("🚜 Error creating farm:", error)
+    console.error("🚜 Error creating farm:", {
+      name: error instanceof Error ? error.name : 'Unknown',
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: process.env.NODE_ENV === 'development' ? (error instanceof Error ? error.stack : undefined) : undefined
+    })
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

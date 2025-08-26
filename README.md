@@ -319,3 +319,10 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ---
 
 **Happy Coding! 🎉**
+
+
+## TODO
+- [ ] Fix rod push endpoint to not check for the secret_key in each secondary
+rods
+- [ ] timestamp from each secondary rod should be made by the server, not given
+  by the rod

@@ -5,7 +5,6 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "prisma generate && next build",
-    "build:github": "GITHUB_PAGES=true prisma generate && GITHUB_PAGES=true next build",
     "start": "next start",
     "lint": "next lint",
     "postinstall": "prisma generate",
@@ -13,8 +12,6 @@
     "db:push": "prisma db push",
     "db:studio": "prisma studio",
     "db:reset": "prisma db push --force-reset",
-    "export": "GITHUB_PAGES=true next build && next export",
-    "deploy:github": "npm run build:github",
     "health": "node -e \"console.log('Node:', process.version); console.log('Env vars loaded:', {NEXTAUTH_SECRET: !!process.env.NEXTAUTH_SECRET, DATABASE_URL: !!process.env.DATABASE_URL})\"",
     "env:check": "node -e \"console.log('Environment Check:'); console.log('NEXTAUTH_SECRET:', !!process.env.NEXTAUTH_SECRET); console.log('DATABASE_URL:', !!process.env.DATABASE_URL); console.log('NEXTAUTH_URL:', process.env.NEXTAUTH_URL || 'NOT SET')\""
   },

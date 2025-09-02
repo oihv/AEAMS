@@ -10,26 +10,27 @@ interface PrismaError extends Error {
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  trustHost: true,
   adapter: PrismaAdapter(prisma),
   providers: [
     Credentials({
       name: "credentials",
       credentials: {
-        email: { 
-          label: "Email", 
+        email: {
+          label: "Email",
           type: "email",
           placeholder: "Enter your email" 
         },
-        password: { 
-          label: "Password", 
+        password: {
+          label: "Password",
           type: "password",
-          placeholder: "Enter your password" 
+          placeholder: "Enter your password"
         }
       },
       async authorize(credentials) {
         console.log("🔐 Auth attempt for:", credentials?.email) // Debug log
         console.log("🗄️ Database connection status check...")
-        
+
         if (!credentials?.email || !credentials?.password) {
           console.log("❌ Missing credentials")
           return null
@@ -40,7 +41,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           console.log("🚀 Testing Supabase connection...")
           await prisma.$queryRaw`SELECT 1`
           console.log("✅ Supabase connection successful")
-          
+
           const user = await prisma.user.findUnique({
             where: {
               email: credentials.email as string
@@ -48,45 +49,41 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           })
 
           if (!user || !user.password) {
-            console.log("❌ User not found or no password:", credentials.email)
-            console.log("📊 Available users count:", await prisma.user.count())
+            console.log("❌ User not found or no password set")
             return null
           }
 
-          console.log("👤 User found:", { id: user.id, email: user.email, hasPassword: !!user.password })
-
-          const isPasswordValid = await bcryptjs.compare(
+          console.log("🔍 User found, verifying password...")
+          
+          // Verify password
+          const isValidPassword = await bcryptjs.compare(
             credentials.password as string,
             user.password
           )
 
-          if (!isPasswordValid) {
-            console.log("❌ Invalid password for:", credentials.email)
+          if (!isValidPassword) {
+            console.log("❌ Invalid password")
             return null
           }
 
-          console.log("✅ Auth success for:", user.email)
+          console.log("✅ Authentication successful for:", user.email)
+          
+          // Return user object - this becomes the JWT token payload
           return {
-            id: user.id,
+            id: user.id.toString(),
             email: user.email,
-            name: user.name,
+            name: user.email, // Using email as name for now
           }
         } catch (error: unknown) {
-          const dbError = error as PrismaError
-          console.error("💥 Supabase auth error:", {
-            name: dbError.name,
-            message: dbError.message,
-            code: dbError.code,
-            meta: dbError.meta
+          const e = error as PrismaError
+          console.error("🚨 Auth error:", {
+            message: e.message,
+            code: e.code,
+            meta: e.meta
           })
           
-          // Specific Supabase error handling
-          if (dbError.code === 'P1001') {
-            console.error("🚨 Cannot reach Supabase database - check network connection")
-          } else if (dbError.code === 'P1008') {
-            console.error("🚨 Supabase connection timeout")
-          } else if (dbError.message?.includes('ENOTFOUND')) {
-            console.error("🚨 DNS resolution failed for Supabase hostname")
+          if (e.code === 'P1001') {
+            console.error("🔌 Database connection failed - check your DATABASE_URL")
           }
           
           return null
@@ -98,9 +95,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     strategy: "jwt",
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
+  jwt: {
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+  },
   cookies: {
     sessionToken: {
-      name: process.env.NODE_ENV === 'production' 
+      name: process.env.NODE_ENV === 'production'
         ? '__Secure-next-auth.session-token'
         : 'next-auth.session-token',
       options: {
@@ -120,7 +120,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.id = user.id
         token.email = user.email
       }
-      
+
       if (process.env.NODE_ENV === 'development') {
         console.log("🎫 JWT token updated:", { id: token.id, email: token.email })
       }
@@ -131,9 +131,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.id = token.id as string
         session.user.email = token.email as string
       }
-      
+
       if (process.env.NODE_ENV === 'development') {
-        console.log("🔐 Session updated:", { 
+        console.log("🔐 Session updated:", {
           user: session.user ? { id: session.user.id, email: session.user.email } : null
         })
       }

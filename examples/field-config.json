@@ -1,0 +1,27 @@
+{
+  "api": {
+    "url": "https://aeams-test-production.up.railway.app",
+    "secret": "AEAMS_SECRET_zhmaj9w00ag",
+    "timeout": 30
+  },
+  "farm": {
+    "main_rod_id": "justintul",
+    "secondary_rod_id": "field_sensor_north",
+    "location": "Field A - North Section"
+  },
+  "sensor_data": {
+    "temperature": 22.1,
+    "moisture": 45.8,
+    "ph": 7.2,
+    "conductivity": 0.9,
+    "nitrogen": 15.2,
+    "phosphorus": 8.7,
+    "potassium": 19.5
+  },
+  "options": {
+    "auto_timestamp": true,
+    "validate_ranges": true,
+    "show_response": true,
+    "retry_attempts": 3
+  }
+}

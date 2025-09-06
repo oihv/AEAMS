@@ -1,0 +1,27 @@
+{
+  "api": {
+    "url": "https://aeams-test-production.up.railway.app",
+    "secret": "AEAMS_SECRET_zhmaj9w00ag",
+    "timeout": 30
+  },
+  "farm": {
+    "main_rod_id": "justintul",
+    "secondary_rod_id": "greenhouse_sensor_01",
+    "location": "Greenhouse A - Section 1"
+  },
+  "sensor_data": {
+    "temperature": 25.4,
+    "moisture": 68.2,
+    "ph": 6.5,
+    "conductivity": 1.4,
+    "nitrogen": 18.7,
+    "phosphorus": 12.3,
+    "potassium": 24.1
+  },
+  "options": {
+    "auto_timestamp": true,
+    "validate_ranges": true,
+    "show_response": true,
+    "retry_attempts": 3
+  }
+}

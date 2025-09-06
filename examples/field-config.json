@@ -6,7 +6,7 @@
   },
   "farm": {
     "main_rod_id": "justintul",
-    "secondary_rod_id": "field_sensor_north",
+    "secondary_rod_ids": [1, 2, 3, 4],
     "location": "Field A - North Section"
   },
   "sensor_data": {

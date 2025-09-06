@@ -8,6 +8,7 @@
 # Default values
 CONFIG_FILE=""
 INTERACTIVE_MODE=false
+BATCH_MODE=false
 SHOW_HELP=false
 
 # API Configuration
@@ -16,7 +17,8 @@ SECRET_KEY="AEAMS_SECRET_zhmaj9w00ag"
 
 # Farm Configuration
 MAIN_ROD_ID="justintul"
-SECONDARY_ROD_ID="test_sensor_001"
+SECONDARY_ROD_ID="1"
+SECONDARY_ROD_IDS=(1)
 
 # Sensor Data (default values)
 TEMPERATURE="23.5"
@@ -64,16 +66,17 @@ show_help() {
     echo -e "${NC}2. Interactive mode:${NC}"
     echo -e "   ${GREEN}./send-aeams-data.sh -i${NC}"
     echo
-    echo -e "${NC}3. Command line parameters:${NC}"
-    echo -e "   ${GREEN}./send-aeams-data.sh -m farm_01 -s sensor_01 -t 25.4 -w 60.2${NC}"
+    echo -e "${NC}3. Target specific rod numbers:${NC}"
+    echo -e "   ${GREEN}./send-aeams-data.sh -m farm_01 -s 1 -t 25.4 -w 60.2${NC}"
     echo
-    echo -e "${NC}4. Mix config file with parameter overrides:${NC}"
-    echo -e "   ${GREEN}./send-aeams-data.sh -c field-config.json -t 28.5 -w 45.1${NC}"
+    echo -e "${NC}4. Target multiple rod numbers (batch mode):${NC}"
+    echo -e "   ${GREEN}./send-aeams-data.sh -m farm_01 -S 1,2,3 -B${NC}"
     echo
     echo -e "${YELLOW}PARAMETERS:${NC}"
     echo -e "  ${NC}-c, --config FILE      Path to JSON configuration file${NC}"
     echo -e "  ${NC}-m, --main-rod ID      Main rod identifier (farm controller)${NC}"
-    echo -e "  ${NC}-s, --secondary-rod ID Secondary rod identifier (sensor unit)${NC}"
+    echo -e "  ${NC}-s, --secondary-rod NUM Secondary rod number (1, 2, 3, etc.)${NC}"
+    echo -e "  ${NC}-S, --secondary-rods   Comma-separated secondary rod numbers${NC}"
     echo -e "  ${NC}-t, --temperature VAL  Temperature in Celsius${NC}"
     echo -e "  ${NC}-w, --moisture VAL     Moisture percentage (0-100)${NC}"
     echo -e "  ${NC}-p, --ph VAL          pH level (0-14)${NC}"
@@ -84,6 +87,7 @@ show_help() {
     echo -e "  ${NC}-u, --url URL         API base URL${NC}"
     echo -e "  ${NC}-r, --secret KEY      API secret key${NC}"
     echo -e "  ${NC}-i, --interactive     Run in interactive mode${NC}"
+    echo -e "  ${NC}-B, --batch-mode      Send data to multiple secondary rods${NC}"
     echo -e "  ${NC}-h, --help           Show this help message${NC}"
     echo
     echo -e "${YELLOW}CONFIGURATION FILE FORMAT:${NC}"
@@ -191,8 +195,19 @@ get_interactive_input() {
     read -p "Main Rod ID [$MAIN_ROD_ID]: " input
     [ -n "$input" ] && MAIN_ROD_ID="$input"
     
-    read -p "Secondary Rod ID [$SECONDARY_ROD_ID]: " input
-    [ -n "$input" ] && SECONDARY_ROD_ID="$input"
+    read -p "Secondary Rod Numbers (comma-separated, e.g., 1,2,3) [$SECONDARY_ROD_ID]: " input
+    if [ -n "$input" ]; then
+        IFS=',' read -ra SECONDARY_ROD_IDS <<< "$input"
+        # Trim whitespace and convert to array
+        temp_array=()
+        for rod in "${SECONDARY_ROD_IDS[@]}"; do
+            rod=$(echo "$rod" | xargs)  # trim whitespace
+            temp_array+=("$rod")
+        done
+        SECONDARY_ROD_IDS=("${temp_array[@]}")
+    else
+        SECONDARY_ROD_IDS=("$SECONDARY_ROD_ID")
+    fi
     
     echo
     echo "Enter sensor readings (press Enter for random values):"
@@ -251,23 +266,45 @@ send_sensor_data() {
     # Generate timestamp
     local timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
     
+    # Handle multiple secondary rods or single rod
+    local target_rods=()
+    if [ ${#SECONDARY_ROD_IDS[@]} -gt 0 ]; then
+        target_rods=("${SECONDARY_ROD_IDS[@]}")
+    else
+        target_rods=("$SECONDARY_ROD_ID")
+    fi
+    
+    # Build readings array for all secondary rods
+    local readings_array=""
+    local rod_count=0
+    
+    for secondary_rod_id in "${target_rods[@]}"; do
+        if [ $rod_count -gt 0 ]; then
+            readings_array="$readings_array,"
+        fi
+        
+        readings_array="$readings_array
+        {
+            \"rod_id\": $secondary_rod_id,
+            \"secret\": \"$SECRET_KEY\",
+            \"timestamp\": \"$timestamp\",
+            \"temperature\": $TEMPERATURE,
+            \"moisture\": $MOISTURE,
+            \"ph\": $PH,
+            \"conductivity\": $CONDUCTIVITY,
+            \"nitrogen\": $NITROGEN,
+            \"phosphorus\": $PHOSPHORUS,
+            \"potassium\": $POTASSIUM
+        }"
+        
+        ((rod_count++))
+    done
+    
     # Build JSON payload
     local json_payload=$(cat <<EOF
 {
     "secret": "$SECRET_KEY",
-    "readings": [
-        {
-            "rod_id": "$SECONDARY_ROD_ID",
-            "secret": "$SECRET_KEY",
-            "timestamp": "$timestamp",
-            "temperature": $TEMPERATURE,
-            "moisture": $MOISTURE,
-            "ph": $PH,
-            "conductivity": $CONDUCTIVITY,
-            "nitrogen": $NITROGEN,
-            "phosphorus": $PHOSPHORUS,
-            "potassium": $POTASSIUM
-        }
+    "readings": [$readings_array
     ]
 }
 EOF
@@ -275,7 +312,8 @@ EOF
     
     local api_endpoint="$API_URL/api/rod/$MAIN_ROD_ID"
     
-    print_colored "info" "Sending data to: $api_endpoint"
+    print_colored "info" "Sending data to Main Rod: $MAIN_ROD_ID"
+    print_colored "info" "Targeting Secondary Rods: $(IFS=', '; echo "${target_rods[*]}")"
     echo
     echo -e "${YELLOW}Payload:${NC}"
     echo "$json_payload"
@@ -329,7 +367,23 @@ while [[ $# -gt 0 ]]; do
             ;;
         -s|--secondary-rod)
             SECONDARY_ROD_ID="$2"
+            SECONDARY_ROD_IDS=("$2")
             shift 2
+            ;;
+        -S|--secondary-rods)
+            IFS=',' read -ra SECONDARY_ROD_IDS <<< "$2"
+            # Trim whitespace from each element
+            temp_array=()
+            for rod in "${SECONDARY_ROD_IDS[@]}"; do
+                rod=$(echo "$rod" | xargs)  # trim whitespace
+                temp_array+=("$rod")
+            done
+            SECONDARY_ROD_IDS=("${temp_array[@]}")
+            shift 2
+            ;;
+        -B|--batch-mode)
+            BATCH_MODE=true
+            shift
             ;;
         -t|--temperature)
             TEMPERATURE="$2"
@@ -414,10 +468,11 @@ if [ "$INTERACTIVE_MODE" = true ]; then
 fi
 
 # Display current configuration
-print_colored "highlight" "Current Configuration:"
+print_colored "highlight" "Current Rod Targeting Configuration:"
 echo "API URL:          $API_URL"
 echo "Main Rod ID:      $MAIN_ROD_ID"
-echo "Secondary Rod ID: $SECONDARY_ROD_ID"
+echo "Secondary Rods:   $(IFS=', '; echo "${SECONDARY_ROD_IDS[*]}")"
+echo "Rod Count:        ${#SECONDARY_ROD_IDS[@]}"
 echo
 echo -e "${YELLOW}Sensor Data:${NC}"
 echo "  Temperature:    ${TEMPERATURE}°C"

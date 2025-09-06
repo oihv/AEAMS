@@ -6,7 +6,7 @@
   },
   "farm": {
     "main_rod_id": "justintul",
-    "secondary_rod_id": "hydro_monitor_01",
+    "secondary_rod_ids": [1, 2],
     "location": "Hydroponic System - Tank 1"
   },
   "sensor_data": {

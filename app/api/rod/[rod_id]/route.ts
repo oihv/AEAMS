@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma"
 interface RodDataRequest {
   secret: string
   readings: Array<{
-    rod_id: string
+    rod_id: string | number
     secret: string
     timestamp: string
     temperature?: number
@@ -79,21 +79,28 @@ export async function POST(
     const processedReadings = []
     
     for (const reading of data.readings) {
+      // Convert rod_id to string for consistency with database
+      const rodId = String(reading.rod_id)
+      
       // Verify secondary rod secret key too
       if (reading.secret !== secretConfig.value) {
-        console.error(`Invalid secret for rod ${reading.rod_id}`)
+        console.error(`Invalid secret for rod ${rodId}`)
         continue // Skip this reading
       }
 
       // Find or create secondary rod
       let secondaryRod = await prisma.secondaryRod.findUnique({
-        where: { rodId: reading.rod_id }
+        where: { rodId: rodId }
       })
 
       if (!secondaryRod) {
         // First time seeing this secondary rod - create it
         // Generate a meaningful name from the rod ID
         const generateRodName = (rodId: string) => {
+          // For integer rod IDs, create a simple name
+          if (/^\d+$/.test(rodId)) {
+            return `Sensor ${rodId}`
+          }
           // Convert snake_case or camelCase to readable format
           return rodId
             .replace(/[_-]/g, ' ')
@@ -105,8 +112,8 @@ export async function POST(
 
         secondaryRod = await prisma.secondaryRod.create({
           data: {
-            rodId: reading.rod_id,
-            name: generateRodName(reading.rod_id),
+            rodId: rodId,
+            name: generateRodName(rodId),
             mainRodId: mainRod.id,
             lastSeen: new Date()
           }
@@ -114,7 +121,7 @@ export async function POST(
       } else {
         // Verify it belongs to this main rod
         if (secondaryRod.mainRodId !== mainRod.id) {
-          console.error(`Rod ${reading.rod_id} belongs to different main rod`)
+          console.error(`Rod ${rodId} belongs to different main rod`)
           continue // Skip this reading
         }
 
@@ -141,7 +148,7 @@ export async function POST(
       })
 
       processedReadings.push({
-        rod_id: reading.rod_id,
+        rod_id: rodId,
         reading_id: newReading.id,
         status: 'success'
       })

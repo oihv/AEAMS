@@ -6,7 +6,8 @@
 param(
     [string]$ConfigFile = "",
     [string]$MainRodId = "",
-    [string]$SecondaryRodId = "",
+    [int]$SecondaryRodId = 1,
+    [int[]]$SecondaryRodIds = @(),
     [double]$Temperature = $null,
     [double]$Moisture = $null,
     [double]$Ph = $null,
@@ -17,6 +18,7 @@ param(
     [string]$ApiUrl = "",
     [string]$Secret = "",
     [switch]$Interactive,
+    [switch]$BatchMode,
     [switch]$Help
 )
 
@@ -56,16 +58,17 @@ function Show-Help {
     Write-Host "2. Interactive mode:" -ForegroundColor White
     Write-Host "   .\Send-AEAMSData.ps1 -Interactive" -ForegroundColor Gray
     Write-Host ""
-    Write-Host "3. Command line parameters:" -ForegroundColor White
-    Write-Host "   .\Send-AEAMSData.ps1 -MainRodId 'farm_01' -SecondaryRodId 'sensor_01' -Temperature 25.4 -Moisture 60.2" -ForegroundColor Gray
+    Write-Host "3. Target specific rod numbers:" -ForegroundColor White
+    Write-Host "   .\Send-AEAMSData.ps1 -MainRodId 'farm_01' -SecondaryRodId 1 -Temperature 25.4" -ForegroundColor Gray
     Write-Host ""
-    Write-Host "4. Mix config file with parameter overrides:" -ForegroundColor White
-    Write-Host "   .\Send-AEAMSData.ps1 -ConfigFile 'field-config.json' -Temperature 28.5 -Moisture 45.1" -ForegroundColor Gray
+    Write-Host "4. Target multiple rod numbers (batch mode):" -ForegroundColor White
+    Write-Host "   .\Send-AEAMSData.ps1 -MainRodId 'farm_01' -SecondaryRodIds @(1,2,3) -BatchMode" -ForegroundColor Gray
     Write-Host ""
     Write-Host "PARAMETERS:" -ForegroundColor Yellow
     Write-Host "  -ConfigFile      Path to JSON configuration file" -ForegroundColor White
     Write-Host "  -MainRodId       Main rod identifier (farm controller)" -ForegroundColor White
-    Write-Host "  -SecondaryRodId  Secondary rod identifier (sensor unit)" -ForegroundColor White
+    Write-Host "  -SecondaryRodId  Secondary rod number (1, 2, 3, etc.)" -ForegroundColor White
+    Write-Host "  -SecondaryRodIds Array of secondary rod numbers for batch mode" -ForegroundColor White
     Write-Host "  -Temperature     Temperature in Celsius" -ForegroundColor White
     Write-Host "  -Moisture        Moisture percentage (0-100)" -ForegroundColor White
     Write-Host "  -Ph              pH level (0-14)" -ForegroundColor White
@@ -76,6 +79,7 @@ function Show-Help {
     Write-Host "  -ApiUrl          API base URL" -ForegroundColor White
     Write-Host "  -Secret          API secret key" -ForegroundColor White
     Write-Host "  -Interactive     Run in interactive mode" -ForegroundColor White
+    Write-Host "  -BatchMode       Send data to multiple secondary rods" -ForegroundColor White
     Write-Host "  -Help            Show this help message" -ForegroundColor White
     Write-Host ""
     Write-Host "CONFIGURATION FILE FORMAT:" -ForegroundColor Yellow
@@ -191,26 +195,40 @@ function Get-InteractiveInput {
 function Send-SensorData {
     param($Config)
     
+    # Handle multiple secondary rods or single rod
+    $SecondaryRods = @()
+    if ($Config.farm.secondary_rod_ids -and $Config.farm.secondary_rod_ids.Count -gt 0) {
+        $SecondaryRods = $Config.farm.secondary_rod_ids
+    } elseif ($Config.farm.secondary_rod_id) {
+        $SecondaryRods = @($Config.farm.secondary_rod_id)
+    } else {
+        $SecondaryRods = @(1)  # Default to rod 1
+    }
+    
     # Generate timestamp
     $Timestamp = (Get-Date).ToString("yyyy-MM-ddTHH:mm:ssZ")
+    
+    # Build readings array for all secondary rods
+    $Readings = @()
+    foreach ($RodId in $SecondaryRods) {
+        $Readings += @{
+            rod_id = [int]$RodId
+            secret = $Config.api.secret
+            timestamp = $Timestamp
+            temperature = $Config.sensor_data.temperature
+            moisture = $Config.sensor_data.moisture
+            ph = $Config.sensor_data.ph
+            conductivity = $Config.sensor_data.conductivity
+            nitrogen = $Config.sensor_data.nitrogen
+            phosphorus = $Config.sensor_data.phosphorus
+            potassium = $Config.sensor_data.potassium
+        }
+    }
     
     # Build JSON payload
     $Payload = @{
         secret = $Config.api.secret
-        readings = @(
-            @{
-                rod_id = $Config.farm.secondary_rod_id
-                secret = $Config.api.secret
-                timestamp = $Timestamp
-                temperature = $Config.sensor_data.temperature
-                moisture = $Config.sensor_data.moisture
-                ph = $Config.sensor_data.ph
-                conductivity = $Config.sensor_data.conductivity
-                nitrogen = $Config.sensor_data.nitrogen
-                phosphorus = $Config.sensor_data.phosphorus
-                potassium = $Config.sensor_data.potassium
-            }
-        )
+        readings = $Readings
     } | ConvertTo-Json -Depth 3
     
     $ApiEndpoint = "$($Config.api.url)/api/rod/$($Config.farm.main_rod_id)"
@@ -277,7 +295,8 @@ $Config = @{
     }
     farm = @{
         main_rod_id = "justintul"
-        secondary_rod_id = "test_sensor_001"
+        secondary_rod_id = 1
+        secondary_rod_ids = @(1)
     }
     sensor_data = @{
         temperature = 23.5
@@ -309,7 +328,16 @@ if ($Interactive) {
 if ($ApiUrl) { $Config.api.url = $ApiUrl }
 if ($Secret) { $Config.api.secret = $Secret }
 if ($MainRodId) { $Config.farm.main_rod_id = $MainRodId }
-if ($SecondaryRodId) { $Config.farm.secondary_rod_id = $SecondaryRodId }
+
+# Handle secondary rod targeting
+if ($SecondaryRodIds -and $SecondaryRodIds.Count -gt 0) {
+    $Config.farm.secondary_rod_ids = $SecondaryRodIds
+    Write-ColoredOutput "Info" "Targeting multiple secondary rods: $($SecondaryRodIds -join ', ')"
+} elseif ($SecondaryRodId -gt 0) {
+    $Config.farm.secondary_rod_id = $SecondaryRodId
+    $Config.farm.secondary_rod_ids = @($SecondaryRodId)
+    Write-ColoredOutput "Info" "Targeting single secondary rod: $SecondaryRodId"
+}
 if ($null -ne $Temperature) { $Config.sensor_data.temperature = $Temperature }
 if ($null -ne $Moisture) { $Config.sensor_data.moisture = $Moisture }
 if ($null -ne $Ph) { $Config.sensor_data.ph = $Ph }
@@ -319,10 +347,11 @@ if ($null -ne $Phosphorus) { $Config.sensor_data.phosphorus = $Phosphorus }
 if ($null -ne $Potassium) { $Config.sensor_data.potassium = $Potassium }
 
 # Display current configuration
-Write-ColoredOutput "Highlight" "Current Configuration:"
+Write-ColoredOutput "Highlight" "Current Rod Targeting Configuration:"
 Write-Host "API URL:          $($Config.api.url)" -ForegroundColor White
 Write-Host "Main Rod ID:      $($Config.farm.main_rod_id)" -ForegroundColor White
-Write-Host "Secondary Rod ID: $($Config.farm.secondary_rod_id)" -ForegroundColor White
+Write-Host "Secondary Rods:   $($Config.farm.secondary_rod_ids -join ', ')" -ForegroundColor White
+Write-Host "Rod Count:        $($Config.farm.secondary_rod_ids.Count)" -ForegroundColor White
 Write-Host ""
 Write-Host "Sensor Data:" -ForegroundColor Yellow
 Write-Host "  Temperature:    $($Config.sensor_data.temperature)°C" -ForegroundColor White

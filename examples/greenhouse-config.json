@@ -6,7 +6,7 @@
   },
   "farm": {
     "main_rod_id": "justintul",
-    "secondary_rod_id": "greenhouse_sensor_01",
+    "secondary_rod_ids": [1, 2, 3],
     "location": "Greenhouse A - Section 1"
   },
   "sensor_data": {

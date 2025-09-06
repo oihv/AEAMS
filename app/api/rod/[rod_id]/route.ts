@@ -92,9 +92,21 @@ export async function POST(
 
       if (!secondaryRod) {
         // First time seeing this secondary rod - create it
+        // Generate a meaningful name from the rod ID
+        const generateRodName = (rodId: string) => {
+          // Convert snake_case or camelCase to readable format
+          return rodId
+            .replace(/[_-]/g, ' ')
+            .replace(/([a-z])([A-Z])/g, '$1 $2')
+            .split(' ')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+            .join(' ')
+        }
+
         secondaryRod = await prisma.secondaryRod.create({
           data: {
             rodId: reading.rod_id,
+            name: generateRodName(reading.rod_id),
             mainRodId: mainRod.id,
             lastSeen: new Date()
           }

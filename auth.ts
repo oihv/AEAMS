@@ -9,8 +9,16 @@ interface PrismaError extends Error {
   meta?: unknown
 }
 
+// Clean and validate environment variables
+const NEXTAUTH_SECRET = process.env.NEXTAUTH_SECRET?.trim()
+
+if (!NEXTAUTH_SECRET || NEXTAUTH_SECRET.length < 32) {
+  console.error("🚨 NEXTAUTH_SECRET is missing or too short (need 32+ characters)")
+}
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   trustHost: true,
+  secret: NEXTAUTH_SECRET,
   adapter: PrismaAdapter(prisma),
   providers: [
     Credentials({
@@ -143,7 +151,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   debug: process.env.NODE_ENV === "development",
   logger: {
     error: (error: Error) => {
-      console.error("🚨 NextAuth Error:", error)
+      console.error("🚨 NextAuth Error:", error.message)
+      // Don't expose full error details in production
+      if (process.env.NODE_ENV === 'development') {
+        console.error("🔍 Full error:", error)
+      }
     },
     warn: (code: string) => {
       if (process.env.NODE_ENV === 'development') {

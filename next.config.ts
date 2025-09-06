@@ -1,6 +1,5 @@
 import type { NextConfig } from "next";
 
-const isProd = process.env.NODE_ENV === 'production';
 const isGitHubPages = process.env.GITHUB_PAGES === 'true';
 
 const nextConfig: NextConfig = {
@@ -31,58 +30,51 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: true,
   },
 
-  // API routes are not supported in static export, so we'll handle this differently
-  async rewrites() {
-    if (isGitHubPages) {
-      // For GitHub Pages, redirect API calls to external API service
+  // Only add rewrites and headers if NOT building for GitHub Pages
+  ...(!isGitHubPages && {
+    async rewrites() {
+      return [];
+    },
+
+    async headers() {
       return [
         {
-          source: '/api/:path*',
-          destination: process.env.NEXT_PUBLIC_API_URL || 'https://your-api-service.com/api/:path*',
+          source: '/(.*)',
+          headers: [
+            // Security headers to prevent Google flagging
+            {
+              key: 'X-DNS-Prefetch-Control',
+              value: 'on'
+            },
+            {
+              key: 'Strict-Transport-Security',
+              value: 'max-age=63072000; includeSubDomains; preload'
+            },
+            {
+              key: 'X-XSS-Protection',
+              value: '1; mode=block'
+            },
+            {
+              key: 'X-Frame-Options',
+              value: 'DENY'
+            },
+            {
+              key: 'X-Content-Type-Options',
+              value: 'nosniff'
+            },
+            {
+              key: 'Referrer-Policy',
+              value: 'origin-when-cross-origin'
+            },
+            {
+              key: 'Content-Security-Policy',
+              value: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'; connect-src 'self' https:"
+            }
+          ],
         },
-      ];
-    }
-    return [];
-  },
-
-  async headers() {
-    return [
-      {
-        source: '/(.*)',
-        headers: [
-          // Security headers to prevent Google flagging
-          {
-            key: 'X-DNS-Prefetch-Control',
-            value: 'on'
-          },
-          {
-            key: 'Strict-Transport-Security',
-            value: 'max-age=63072000; includeSubDomains; preload'
-          },
-          {
-            key: 'X-XSS-Protection',
-            value: '1; mode=block'
-          },
-          {
-            key: 'X-Frame-Options',
-            value: 'DENY'
-          },
-          {
-            key: 'X-Content-Type-Options',
-            value: 'nosniff'
-          },
-          {
-            key: 'Referrer-Policy',
-            value: 'origin-when-cross-origin'
-          },
-          {
-            key: 'Content-Security-Policy',
-            value: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'; connect-src 'self' https:"
-          }
-        ],
-      },
-    ]
-  },
+      ]
+    },
+  }),
 };
 
 export default nextConfig;

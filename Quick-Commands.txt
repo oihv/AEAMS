@@ -1,0 +1,11 @@
+# AEAMS Quick Commands - Save this for easy copy/paste
+
+# Simple health check:
+curl.exe -X GET "https://aeams-test-production.up.railway.app/api/health"
+
+# Send your original data format (one line):
+curl.exe -X POST "https://aeams-test-production.up.railway.app/api/rod/justintul" -H "Content-Type: application/json" -d '{"secret": "AEAMS_SECRET_zhmaj9w00ag","readings": [{"rod_id": "asdasdsa","secret": "AEAMS_SECRET_zhmaj9w00ag","timestamp": "2025-09-02T14:30:00Z","temperature": 23.5,"moisture": 45.2,"ph": 6.8,"conductivity": 1.2,"nitrogen": 12.5,"phosphorus": 8.3,"potassium": 15.7}]}'
+
+# Or use the PowerShell helper (after loading the script):
+# . .\AEAMS-PowerShell-Helper.ps1
+# Send-RodData -RodId "your_sensor_id" -Temperature 25.0 -Moisture 50.0

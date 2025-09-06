@@ -11,11 +11,12 @@ interface Farm {
   description?: string
   mainRod?: {
     id: string
-    serialNumber: string
+    rodId: string
     isConnected: boolean
     lastSeen?: string
     secondaryRods: Array<{
       id: string
+      rodId: string
       name?: string
       location?: string
       readings: Array<{

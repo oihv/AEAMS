@@ -8,11 +8,12 @@ interface FarmCardProps {
     description?: string
     mainRod?: {
       id: string
-      serialNumber: string
+      rodId: string
       isConnected: boolean
       lastSeen?: string
       secondaryRods: Array<{
         id: string
+        rodId: string
         name?: string
         location?: string
         readings: Array<{
@@ -75,7 +76,7 @@ export default function FarmCard({ farm }: FarmCardProps) {
           <div className="flex justify-between text-sm">
             <span className="text-gray-600">Main Rod:</span>
             <span className="font-medium text-gray-600">
-              {hasMainRod ? farm.mainRod?.serialNumber : 'Not connected'}
+              {hasMainRod ? farm.mainRod?.rodId : 'Not connected'}
             </span>
           </div>
           

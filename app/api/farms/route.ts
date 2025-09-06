@@ -26,7 +26,18 @@ export async function GET() {
     const farms = await prisma.farm.findMany({
       where: { userId: user.id },
       include: {
-        mainRod: true
+        mainRod: {
+          include: {
+            secondaryRods: {
+              include: {
+                readings: {
+                  orderBy: { timestamp: 'desc' },
+                  take: 5 // Get latest 5 readings per secondary rod
+                }
+              }
+            }
+          }
+        }
       }
     })
 

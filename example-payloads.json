@@ -1,0 +1,239 @@
+{
+  "_comment": "AEAMS API Data Push - Example JSON Payloads",
+  "_description": "These are example JSON payloads that can be sent to the AEAMS API",
+  "_api_endpoint": "POST https://aeams-test-production.up.railway.app/api/rod/{main_rod_id}",
+  
+  "example_1_basic_reading": {
+    "description": "Basic sensor reading - single secondary rod",
+    "main_rod_id": "justintul",
+    "payload": {
+      "secret": "AEAMS_SECRET_zhmaj9w00ag",
+      "readings": [
+        {
+          "rod_id": "asdasdsa",
+          "secret": "AEAMS_SECRET_zhmaj9w00ag",
+          "timestamp": "2025-09-06T14:30:00Z",
+          "temperature": 23.5,
+          "moisture": 45.2,
+          "ph": 6.8,
+          "conductivity": 1.2,
+          "nitrogen": 12.5,
+          "phosphorus": 8.3,
+          "potassium": 15.7
+        }
+      ]
+    }
+  },
+
+  "example_2_multiple_sensors": {
+    "description": "Multiple sensor readings from different secondary rods",
+    "main_rod_id": "farm_greenhouse",
+    "payload": {
+      "secret": "AEAMS_SECRET_zhmaj9w00ag",
+      "readings": [
+        {
+          "rod_id": "greenhouse_sensor_01",
+          "secret": "AEAMS_SECRET_zhmaj9w00ag",
+          "timestamp": "2025-09-06T14:30:00Z",
+          "temperature": 28.5,
+          "moisture": 65.3,
+          "ph": 6.5,
+          "conductivity": 1.8,
+          "nitrogen": 18.2,
+          "phosphorus": 11.4,
+          "potassium": 22.7
+        },
+        {
+          "rod_id": "greenhouse_sensor_02",
+          "secret": "AEAMS_SECRET_zhmaj9w00ag",
+          "timestamp": "2025-09-06T14:30:00Z",
+          "temperature": 27.8,
+          "moisture": 62.1,
+          "ph": 6.7,
+          "conductivity": 1.6,
+          "nitrogen": 17.5,
+          "phosphorus": 10.8,
+          "potassium": 21.3
+        }
+      ]
+    }
+  },
+
+  "example_3_field_monitoring": {
+    "description": "Outdoor field monitoring with multiple zones",
+    "main_rod_id": "farm_field_a",
+    "payload": {
+      "secret": "AEAMS_SECRET_zhmaj9w00ag",
+      "readings": [
+        {
+          "rod_id": "sensor_north",
+          "secret": "AEAMS_SECRET_zhmaj9w00ag",
+          "timestamp": "2025-09-06T14:30:00Z",
+          "temperature": 22.1,
+          "moisture": 38.7,
+          "ph": 7.1,
+          "conductivity": 0.9,
+          "nitrogen": 15.8,
+          "phosphorus": 9.2,
+          "potassium": 19.3
+        },
+        {
+          "rod_id": "sensor_south",
+          "secret": "AEAMS_SECRET_zhmaj9w00ag",
+          "timestamp": "2025-09-06T14:30:00Z",
+          "temperature": 23.4,
+          "moisture": 41.2,
+          "ph": 6.9,
+          "conductivity": 1.1,
+          "nitrogen": 16.2,
+          "phosphorus": 9.8,
+          "potassium": 20.1
+        },
+        {
+          "rod_id": "sensor_center",
+          "secret": "AEAMS_SECRET_zhmaj9w00ag",
+          "timestamp": "2025-09-06T14:30:00Z",
+          "temperature": 22.8,
+          "moisture": 39.9,
+          "ph": 7.0,
+          "conductivity": 1.0,
+          "nitrogen": 16.0,
+          "phosphorus": 9.5,
+          "potassium": 19.7
+        }
+      ]
+    }
+  },
+
+  "example_4_hydroponic_system": {
+    "description": "Hydroponic system with high moisture and conductivity",
+    "main_rod_id": "hydro_lab_01",
+    "payload": {
+      "secret": "AEAMS_SECRET_zhmaj9w00ag",
+      "readings": [
+        {
+          "rod_id": "hydro_sensor_tank_a",
+          "secret": "AEAMS_SECRET_zhmaj9w00ag",
+          "timestamp": "2025-09-06T14:30:00Z",
+          "temperature": 24.8,
+          "moisture": 95.0,
+          "ph": 5.8,
+          "conductivity": 2.1,
+          "nitrogen": 25.4,
+          "phosphorus": 15.7,
+          "potassium": 28.9
+        }
+      ]
+    }
+  },
+
+  "example_5_research_plot": {
+    "description": "Research plot with NPK analyzer",
+    "main_rod_id": "research_plot",
+    "payload": {
+      "secret": "AEAMS_SECRET_zhmaj9w00ag",
+      "readings": [
+        {
+          "rod_id": "npk_analyzer_01",
+          "secret": "AEAMS_SECRET_zhmaj9w00ag",
+          "timestamp": "2025-09-06T14:30:00Z",
+          "temperature": 24.2,
+          "moisture": 52.8,
+          "ph": 6.9,
+          "conductivity": 1.35,
+          "nitrogen": 18.7,
+          "phosphorus": 12.4,
+          "potassium": 22.1
+        }
+      ]
+    }
+  },
+
+  "example_6_minimal_reading": {
+    "description": "Minimal reading with only required fields + temperature",
+    "main_rod_id": "justintul",
+    "payload": {
+      "secret": "AEAMS_SECRET_zhmaj9w00ag",
+      "readings": [
+        {
+          "rod_id": "temp_only_sensor",
+          "secret": "AEAMS_SECRET_zhmaj9w00ag",
+          "timestamp": "2025-09-06T14:30:00Z",
+          "temperature": 25.3
+        }
+      ]
+    }
+  },
+
+  "example_7_dry_conditions": {
+    "description": "Dry weather conditions monitoring",
+    "main_rod_id": "desert_farm",
+    "payload": {
+      "secret": "AEAMS_SECRET_zhmaj9w00ag",
+      "readings": [
+        {
+          "rod_id": "dry_sensor_01",
+          "secret": "AEAMS_SECRET_zhmaj9w00ag",
+          "timestamp": "2025-09-06T14:30:00Z",
+          "temperature": 32.3,
+          "moisture": 15.1,
+          "ph": 7.8,
+          "conductivity": 0.4,
+          "nitrogen": 8.9,
+          "phosphorus": 5.4,
+          "potassium": 12.1
+        }
+      ]
+    }
+  },
+
+  "_usage_examples": {
+    "curl_command": "curl -X POST \"https://aeams-test-production.up.railway.app/api/rod/justintul\" -H \"Content-Type: application/json\" -d @example_payload.json",
+    "powershell_command": "Invoke-WebRequest -Uri \"https://aeams-test-production.up.railway.app/api/rod/justintul\" -Method POST -Headers @{\"Content-Type\"=\"application/json\"} -Body (Get-Content example_payload.json -Raw)",
+    "batch_file": "Use AEAMS-All-In-One-Push.bat which automatically formats this JSON",
+    "linux_script": "Use aeams-push.sh which automatically formats this JSON"
+  },
+
+  "_field_descriptions": {
+    "secret": "Global authentication key - must match server configuration",
+    "rod_id": "Unique identifier for the secondary sensor rod",
+    "timestamp": "ISO 8601 format timestamp (UTC) - when the reading was taken",
+    "temperature": "Temperature in Celsius (°C) - optional",
+    "moisture": "Soil moisture percentage (0-100%) - optional", 
+    "ph": "Soil pH level (0-14) - optional",
+    "conductivity": "Electrical conductivity in mS/cm - optional",
+    "nitrogen": "Nitrogen content in ppm or mg/kg - optional",
+    "phosphorus": "Phosphorus content in ppm or mg/kg - optional", 
+    "potassium": "Potassium content in ppm or mg/kg - optional"
+  },
+
+  "_api_response_example": {
+    "success_response": {
+      "message": "Data received successfully",
+      "farm_id": "cmeqgslzj0001k104enme45mg",
+      "main_rod_id": "justintul", 
+      "processed_readings": 1,
+      "readings": [
+        {
+          "rod_id": "asdasdsa",
+          "reading_id": "cmf3kf5v10011mp0ffr0pju3a",
+          "status": "success"
+        }
+      ]
+    },
+    "error_response_examples": {
+      "invalid_secret": {
+        "error": "Invalid secret key",
+        "status": 401
+      },
+      "rod_not_found": {
+        "error": "Main rod not found", 
+        "status": 404
+      },
+      "rod_not_bound": {
+        "error": "Main rod not bound to any farm",
+        "status": 400
+      }
+    }
+  }
+}

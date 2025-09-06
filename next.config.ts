@@ -1,9 +1,11 @@
 import type { NextConfig } from "next";
 
-const isGitHubPages = process.env.GITHUB_PAGES === 'true';
+// Only enable GitHub Pages mode when actually building for GitHub Pages deployment
+// Railway and local builds should use normal Next.js mode with API routes
+const isGitHubPages = process.env.GITHUB_PAGES === 'true' && process.env.GITHUB_ACTIONS === 'true';
 
 const nextConfig: NextConfig = {
-  // Enable static export for GitHub Pages
+  // Enable static export only for GitHub Pages deployment
   output: isGitHubPages ? 'export' : undefined,
   
   // Configure base path for GitHub Pages (repository name)

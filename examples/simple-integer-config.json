@@ -1,0 +1,19 @@
+{
+  "api": {
+    "url": "https://aeams-test-production.up.railway.app",
+    "secret": "AEAMS_SECRET_zhmaj9w00ag"
+  },
+  "farm": {
+    "main_rod_id": "justintul",
+    "secondary_rod_ids": [1, 2, 3]
+  },
+  "sensor_data": {
+    "temperature": 25.0,
+    "moisture": 50.0,
+    "ph": 7.0,
+    "conductivity": 1.5,
+    "nitrogen": 15.0,
+    "phosphorus": 10.0,
+    "potassium": 20.0
+  }
+}

@@ -7,7 +7,8 @@
   "farm": {
     "main_rod_id": "justintul",
     "secondary_rod_ids": [1, 2],
-    "location": "Hydroponic System - Tank 1"
+    "location": "Hydroponic System - Tank 1",
+    "description": "Integer-based secondary rods for hydroponic monitoring"
   },
   "sensor_data": {
     "temperature": 24.8,

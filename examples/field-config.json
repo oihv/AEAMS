@@ -7,7 +7,8 @@
   "farm": {
     "main_rod_id": "justintul",
     "secondary_rod_ids": [1, 2, 3, 4],
-    "location": "Field A - North Section"
+    "location": "Field A - North Section",
+    "description": "Integer-based secondary rods for outdoor field monitoring"
   },
   "sensor_data": {
     "temperature": 22.1,

@@ -7,7 +7,8 @@
   "farm": {
     "main_rod_id": "justintul",
     "secondary_rod_ids": [1, 2, 3],
-    "location": "Greenhouse A - Section 1"
+    "location": "Greenhouse A - Section 1",
+    "description": "Integer-based secondary rods for greenhouse monitoring"
   },
   "sensor_data": {
     "temperature": 25.4,

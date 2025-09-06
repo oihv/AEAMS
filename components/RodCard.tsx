@@ -1,5 +1,5 @@
 export type RodCardProps = {
-  id: number;
+  id: string;
   temperature: number;
   moisture: number;
   ph: number;
@@ -30,7 +30,7 @@ export default function RodCard({ id, temperature, moisture, ph, conductivity, n
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-md transition-shadow">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-gray-900">Rod #{id}</h3>
+        <h3 className="text-lg font-semibold text-gray-900">{id}</h3>
         <div className="w-3 h-3 bg-green-400 rounded-full"></div>
       </div>
       

@@ -18,6 +18,7 @@ interface FarmDetailsProps {
       lastSeen?: Date | null
       secondaryRods: Array<{
         id: string
+        rodId: string
         name?: string | null
         location?: string | null
         isActive: boolean
@@ -167,12 +168,12 @@ export default function FarmDetails({ initialFarm }: FarmDetailsProps) {
 
           {farm.mainRod?.secondaryRods && farm.mainRod.secondaryRods.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {farm.mainRod.secondaryRods.map((rod) => {
+              {farm.mainRod.secondaryRods.map((rod, index) => {
                 const latestReading = rod.readings[0]
                 return (
                   <RodCard
                     key={rod.id}
-                    id={parseInt(rod.id)}
+                    id={rod.rodId || `Rod ${index + 1}`}
                     temperature={latestReading?.temperature || 0}
                     moisture={latestReading?.moisture || 0}
                     ph={latestReading?.ph || 0}

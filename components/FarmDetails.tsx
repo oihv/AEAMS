@@ -15,14 +15,14 @@ interface FarmDetailsProps {
       id: string
       rodId: string
       isConnected: boolean
-      lastSeen?: Date | null
+      lastSeen?: Date | string | null
       secondaryRods: Array<{
         id: string
         rodId: string
         name?: string | null
         location?: string | null
         isActive: boolean
-        lastSeen?: Date | null
+        lastSeen?: Date | string | null
         readings: Array<{
           id: string
           temperature?: number | null
@@ -32,7 +32,7 @@ interface FarmDetailsProps {
           nitrogen?: number | null
           phosphorus?: number | null
           potassium?: number | null
-          timestamp: Date
+          timestamp: Date | string
         }>
       }>
     } | null
@@ -169,11 +169,14 @@ export default function FarmDetails({ initialFarm }: FarmDetailsProps) {
           {farm.mainRod?.secondaryRods && farm.mainRod.secondaryRods.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {farm.mainRod.secondaryRods.map((rod, index) => {
-                const latestReading = rod.readings[0]
+                const latestReading = rod.readings?.[0]
+                // Ensure we have a valid rod identifier
+                const rodDisplayId = rod.rodId || rod.name || `Rod ${index + 1}`
+                
                 return (
                   <RodCard
                     key={rod.id}
-                    id={rod.rodId || `Rod ${index + 1}`}
+                    id={rodDisplayId}
                     temperature={latestReading?.temperature || 0}
                     moisture={latestReading?.moisture || 0}
                     ph={latestReading?.ph || 0}

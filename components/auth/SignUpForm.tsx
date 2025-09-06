@@ -51,7 +51,8 @@ export default function SignUpForm() {
       } else {
         setError(data.error || "An error occurred")
       }
-    } catch (error) {
+    } catch (err) {
+      console.error("Registration error:", err)
       setError("An error occurred. Please try again.")
     } finally {
       setIsLoading(false)

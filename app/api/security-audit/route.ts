@@ -63,11 +63,11 @@ export async function GET(request: Request) {
       ]
     })
     
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
       {
         success: false,
-        error: error.message
+        error: error instanceof Error ? error.message : String(error)
       },
       { status: 500 }
     )

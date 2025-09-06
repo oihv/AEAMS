@@ -93,30 +93,33 @@ export async function GET() {
       status: 'HEALTHY'
     })
     
-  } catch (error: any) {
+  } catch (error: unknown) {
     const totalTime = Date.now() - startTime
     console.error("💥 Supabase health check failed:", error)
     
     // Enhanced error analysis
-    let errorAnalysis: any = {
-      type: error.constructor.name,
-      message: error.message,
-      code: error.code,
-      meta: error.meta
+    const errorAnalysis: Record<string, unknown> = {
+      type: error instanceof Error ? error.constructor.name : 'Unknown',
+      message: error instanceof Error ? error.message : String(error),
+      code: (error as Record<string, unknown>)?.code,
+      meta: (error as Record<string, unknown>)?.meta
     }
     
     // Common Supabase/PostgreSQL error patterns
-    if (error.message?.includes('ENOTFOUND')) {
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    const errorCode = (error as Record<string, unknown>)?.code
+    
+    if (errorMessage?.includes('ENOTFOUND')) {
       errorAnalysis.likely_cause = 'DNS resolution failed - check DATABASE_URL hostname'
-    } else if (error.message?.includes('ETIMEDOUT')) {
+    } else if (errorMessage?.includes('ETIMEDOUT')) {
       errorAnalysis.likely_cause = 'Connection timeout - network or firewall issue'
-    } else if (error.message?.includes('authentication failed')) {
+    } else if (errorMessage?.includes('authentication failed')) {
       errorAnalysis.likely_cause = 'Invalid database credentials in DATABASE_URL'
-    } else if (error.message?.includes('database') && error.message?.includes('does not exist')) {
+    } else if (errorMessage?.includes('database') && errorMessage?.includes('does not exist')) {
       errorAnalysis.likely_cause = 'Database name in DATABASE_URL is incorrect'
-    } else if (error.code === 'P1001') {
+    } else if (errorCode === 'P1001') {
       errorAnalysis.likely_cause = 'Cannot reach database server - check network/firewall'
-    } else if (error.code === 'P1008') {
+    } else if (errorCode === 'P1008') {
       errorAnalysis.likely_cause = 'Database connection timeout'
     }
     

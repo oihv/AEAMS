@@ -39,7 +39,8 @@ export default function SignInForm() {
         console.log("❓ Unknown sign in result:", result)
         setError("Authentication failed. Please try again.")
       }
-    } catch (error) {
+    } catch (err) {
+      console.error("Sign in error:", err)
       setError("An error occurred. Please try again.")
     } finally {
       setIsLoading(false)

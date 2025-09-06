@@ -40,10 +40,72 @@ export default function FarmOverview() {
 
   const fetchFarms = async () => {
     try {
-      const response = await fetch("/api/farms")
-      if (response.ok) {
-        const data = await response.json()
-        setFarms(data.farms)
+      // Check if we're in GitHub Pages mode (no API routes available)
+      const isGitHubPages = typeof window !== 'undefined' && 
+        (window.location.hostname === 'codenewb13.github.io' || process.env.GITHUB_PAGES === 'true')
+      
+      if (isGitHubPages) {
+        // For GitHub Pages, show demo data
+        const demoFarms: Farm[] = [
+          {
+            id: 'demo-farm-1',
+            name: 'Demo Greenhouse Farm',
+            location: 'Virtual Location',
+            description: 'This is a demonstration farm for GitHub Pages',
+            mainRod: {
+              id: 'demo-main-rod-1',
+              rodId: 'justintul',
+              isConnected: true,
+              lastSeen: new Date().toISOString(),
+              secondaryRods: [
+                {
+                  id: 'demo-secondary-1',
+                  rodId: 'asdasdsa',
+                  name: 'Greenhouse Sensor 1',
+                  location: 'North Section',
+                  readings: [
+                    {
+                      temperature: 23.5,
+                      moisture: 45.2,
+                      ph: 6.8,
+                      conductivity: 1.2,
+                      nitrogen: 12.5,
+                      phosphorus: 8.3,
+                      potassium: 15.7,
+                      timestamp: new Date().toISOString()
+                    }
+                  ]
+                },
+                {
+                  id: 'demo-secondary-2',
+                  rodId: 'greenhouse_sensor_01',
+                  name: 'Greenhouse Sensor 2',
+                  location: 'South Section',
+                  readings: [
+                    {
+                      temperature: 25.1,
+                      moisture: 48.7,
+                      ph: 7.1,
+                      conductivity: 1.4,
+                      nitrogen: 14.2,
+                      phosphorus: 9.8,
+                      potassium: 17.3,
+                      timestamp: new Date().toISOString()
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+        setFarms(demoFarms)
+      } else {
+        // Normal API call for production
+        const response = await fetch("/api/farms")
+        if (response.ok) {
+          const data = await response.json()
+          setFarms(data.farms)
+        }
       }
     } catch (error) {
       console.error("Error fetching farms:", error)

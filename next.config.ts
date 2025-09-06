@@ -12,13 +12,18 @@ const nextConfig: NextConfig = {
   // Configure asset prefix for GitHub Pages
   assetPrefix: isGitHubPages ? '/AEAMSTEST/' : '',
   
-  // Disable image optimization for static export
+  // Configure image optimization
   images: {
     unoptimized: isGitHubPages ? true : false,
   },
 
   // Configure trailing slash for static sites
   trailingSlash: isGitHubPages ? true : false,
+
+  // Experimental features
+  experimental: {
+    // Add any experimental features here if needed
+  },
 
   // Temporarily disable ESLint during builds to prevent deployment failures
   eslint: {

@@ -1,6 +1,14 @@
-// @ts-nocheck
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+
+interface SecondaryRodWithMainRod {
+  id: string
+  rodId: string
+  name: string | null
+  mainRod: {
+    rodId: string
+  }
+}
 
 // Helper function to generate readable names from rod IDs
 function generateRodName(rodId: string): string {
@@ -76,7 +84,7 @@ export async function GET() {
     return NextResponse.json({
       message: "Current secondary rod names",
       count: allRods.length,
-      rods: allRods.map(rod => ({
+      rods: allRods.map((rod: SecondaryRodWithMainRod) => ({
         rodId: rod.rodId,
         name: rod.name,
         mainRodId: rod.mainRod.rodId,

@@ -53,7 +53,7 @@ export async function GET() {
       }
     })
 
-    console.log("📝 Users found:", users.map((u: { id: string; name: string; email: string; createdAt: Date; password: string | null }) => ({
+    console.log("📝 Users found:", users.map((u: { id: string; name: string | null; email: string; createdAt: Date; password: string | null }) => ({
       ...u,
       hasPassword: !!u.password,
       password: u.password ? '[HIDDEN]' : null
@@ -64,7 +64,7 @@ export async function GET() {
       message: `Supabase database connected successfully`,
       supabaseInfo: {
         userCount,
-        users: users.map((u: { id: string; name: string; email: string; createdAt: Date; password: string | null }) => ({
+        users: users.map((u: { id: string; name: string | null; email: string; createdAt: Date; password: string | null }) => ({
           id: u.id,
           name: u.name,
           email: u.email,

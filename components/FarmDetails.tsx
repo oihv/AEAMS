@@ -173,16 +173,6 @@ export default function FarmDetails({ initialFarm }: FarmDetailsProps) {
                 // Ensure we have a valid rod identifier
                 const rodDisplayId = rod.rodId || rod.name || `Rod ${index + 1}`
                 
-                // Debug: Log what we're actually receiving
-                console.log("🔍 Secondary Rod Data:", {
-                  index,
-                  id: rod.id,
-                  rodId: rod.rodId,
-                  name: rod.name,
-                  displayId: rodDisplayId,
-                  hasReadings: !!latestReading
-                })
-                
                 return (
                   <RodCard
                     key={rod.id}

@@ -1,10 +1,14 @@
 name: Deploy to GitHub Pages
 
+# Disable GitHub Pages deployment since we're using Railway for full Next.js app
+# This workflow is kept for reference but won't run
 on:
-  push:
-    branches: [ main, master ]
-  pull_request:
-    branches: [ main, master ]
+  # Disabled - uncomment to re-enable GitHub Pages deployment
+  # push:
+  #   branches: [ main, master ]
+  # pull_request:
+  #   branches: [ main, master ]
+  workflow_dispatch: # Only run manually if needed
 
 permissions:
   contents: read

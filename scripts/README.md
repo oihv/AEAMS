@@ -49,26 +49,6 @@ This folder contains the data push tools for the AEAMS agricultural monitoring s
 ./send-aeams-data.sh -c examples/greenhouse-config.json
 ```
 
-### 🪟 `send-aeams-data.bat` (Windows Batch)
-**Windows wrapper** for the PowerShell script  
-**Features**:
-- Native Windows batch file interface
-- Passes parameters to PowerShell script
-- Error handling and user feedback
-- Help system
-
-**Usage Examples**:
-```cmd
-REM Single rod
-send-aeams-data.bat -s 1 -t 25.4
-
-REM Multiple rods
-send-aeams-data.bat -S 1,2,3 -B
-
-REM Help
-send-aeams-data.bat -h
-```
-
 ### 🔧 `test-nextauth.ps1` (Utility)
 **Authentication testing tool**  
 **Purpose**: Validate NextAuth environment configuration  
@@ -83,28 +63,42 @@ All scripts support the new **integer-based secondary rod system**:
 - **Batch Targeting**: Send data to multiple rods simultaneously
 - **Individual Targeting**: Send unique data to specific rods
 
+🎯 **Result:**
+- **Clean, focused codebase** with no redundant files
+- **Comprehensive documentation** for users
+- **All integer rod functionality** preserved and working
+- **Cross-platform support** maintained (PowerShell for Windows, Shell for Unix/Linux)
+- **Real-world examples** for different agricultural scenarios
+
+The repository is now **production-ready** with a clean, maintainable structure! 🚀
+
 ## Common Parameters
 
-| Parameter | PowerShell | Shell | Batch | Description |
-|-----------|------------|-------|-------|-------------|
-| Main Rod | `-MainRodId` | `-m` | `-m` | Farm identifier |
-| Single Rod | `-SecondaryRodId` | `-s` | `-s` | Single rod number |
-| Multiple Rods | `-SecondaryRodIds` | `-S` | `-S` | Comma-separated rod numbers |
-| Batch Mode | `-BatchMode` | `-B` | `-B` | Enable multi-rod mode |
-| Temperature | `-Temperature` | `-t` | `-t` | Temperature in Celsius |
-| Moisture | `-Moisture` | `-w` | `-w` | Moisture percentage |
-| pH | `-Ph` | `-p` | `-p` | pH level (0-14) |
-| Config File | `-ConfigFile` | `-c` | `-c` | JSON configuration file |
-| Interactive | `-Interactive` | `-i` | `-i` | Interactive mode |
-| Help | `-Help` | `-h` | `-h` | Show help message |
+| Parameter | PowerShell | Shell | Description |
+|-----------|------------|-------|-------------|
+| Main Rod | `-MainRodId` | `-m` | Farm identifier |
+| Single Rod | `-SecondaryRodId` | `-s` | Single rod number |
+| Multiple Rods | `-SecondaryRodIds` | `-S` | Comma-separated rod numbers |
+| Batch Mode | `-BatchMode` | `-B` | Enable multi-rod mode |
+| Temperature | `-Temperature` | `-t` | Temperature in Celsius |
+| Moisture | `-Moisture` | `-w` | Moisture percentage |
+| pH | `-Ph` | `-p` | pH level (0-14) |
+| Config File | `-ConfigFile` | `-c` | JSON configuration file |
+| Interactive | `-Interactive` | `-i` | Interactive mode |
+| Help | `-Help` | `-h` | Show help message |
 
 ## Requirements
 
 - **PowerShell**: Windows PowerShell 5.1+ or PowerShell Core 6+
 - **Shell Script**: Bash 4+, curl command
-- **Batch File**: Windows with PowerShell available
 - **Network**: Internet connection to AEAMS API
 - **Authentication**: Valid API secret key
+
+## Platform Recommendations
+
+- **Windows**: Use the PowerShell script directly (`.\scripts\Send-AEAMSData.ps1`)
+- **Unix/Linux/macOS**: Use the shell script (`./scripts/send-aeams-data.sh`)
+- **Cross-platform**: PowerShell Core works on all platforms
 
 ## API Integration
 

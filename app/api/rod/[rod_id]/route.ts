@@ -5,7 +5,6 @@ interface RodDataRequest {
   secret: string
   readings: Array<{
     rod_id: string | number
-    secret: string
     timestamp: string
     temperature?: number
     moisture?: number
@@ -82,12 +81,6 @@ export async function POST(
       // Convert rod_id to string for consistency with database
       const rodId = String(reading.rod_id)
       
-      // Verify secondary rod secret key too
-      if (reading.secret !== secretConfig.value) {
-        console.error(`Invalid secret for rod ${rodId}`)
-        continue // Skip this reading
-      }
-
       // Find or create secondary rod
       let secondaryRod = await prisma.secondaryRod.findUnique({
         where: { rodId: rodId }
@@ -143,7 +136,7 @@ export async function POST(
           nitrogen: reading.nitrogen,
           phosphorus: reading.phosphorus,
           potassium: reading.potassium,
-          timestamp: new Date(reading.timestamp)
+          timestamp: new Date()
         }
       })
 

@@ -32,7 +32,7 @@ interface FarmDetailsProps {
           nitrogen?: number | null
           phosphorus?: number | null
           potassium?: number | null
-          timestamp: Date | string
+          timestamp: Date // Must be a date, not only string
         }>
       }>
     } | null
@@ -168,25 +168,64 @@ export default function FarmDetails({ initialFarm }: FarmDetailsProps) {
 
           {farm.mainRod?.secondaryRods && farm.mainRod.secondaryRods.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {farm.mainRod.secondaryRods.map((rod, index) => {
-                const latestReading = rod.readings?.[0]
-                // Ensure we have a valid rod identifier
-                const rodDisplayId = rod.rodId || rod.name || `Rod ${index + 1}`
+              {(() => {
+                // Find the newest timestamp across all rods (rounded to minutes)
+                const allTimestamps = farm.mainRod.secondaryRods
+                  .map(rod => rod.readings?.[0]?.timestamp)
+                  .filter(timestamp => timestamp !== undefined)
+                  .map(timestamp => {
+                    const date = new Date(timestamp)
+                    // Round down to the minute (ignore seconds and milliseconds)
+                    date.setSeconds(0, 0)
+                    return date.getTime()
+                  })
                 
-                return (
-                  <RodCard
-                    key={rod.id}
-                    id={rodDisplayId}
-                    temperature={latestReading?.temperature || 0}
-                    moisture={latestReading?.moisture || 0}
-                    ph={latestReading?.ph || 0}
-                    conductivity={latestReading?.conductivity || 0}
-                    n={latestReading?.nitrogen || 0}
-                    p={latestReading?.phosphorus || 0}
-                    k={latestReading?.potassium || 0}
-                  />
-                )
-              })}
+                const newestTimestamp = allTimestamps.length > 0 ? Math.max(...allTimestamps) : 0
+                
+                return farm.mainRod.secondaryRods.map((rod, index) => {
+                  const latestReading = rod.readings?.[0]
+                  const rodDisplayId = rod.rodId || rod.name || `Rod ${index + 1}`
+                  
+                  // Check if rod has any sensor data
+                  const hasSensorData = !!latestReading && (
+                    latestReading.temperature !== null ||
+                    latestReading.moisture !== null ||
+                    latestReading.ph !== null ||
+                    latestReading.conductivity !== null ||
+                    latestReading.nitrogen !== null ||
+                    latestReading.phosphorus !== null ||
+                    latestReading.potassium !== null
+                  )
+                  
+                  // Check if this rod has the newest timestamp (rounded to minutes)
+                  let rodTimestamp = 0
+                  if (latestReading?.timestamp) {
+                    const date = new Date(latestReading.timestamp)
+                    date.setSeconds(0, 0) // Round down to the minute
+                    rodTimestamp = date.getTime()
+                  }
+                  const hasNewestUpdate = rodTimestamp === newestTimestamp && newestTimestamp > 0
+                  
+                  // Rod is valid if it has sensor data AND has the newest timestamp
+                  const hasValidData = hasSensorData && hasNewestUpdate
+                  
+                  return (
+                    <RodCard
+                      key={rod.id}
+                      id={rodDisplayId}
+                      temperature={latestReading?.temperature || 0}
+                      moisture={latestReading?.moisture || 0}
+                      ph={latestReading?.ph || 0}
+                      conductivity={latestReading?.conductivity || 0}
+                      n={latestReading?.nitrogen || 0}
+                      p={latestReading?.phosphorus || 0}
+                      k={latestReading?.potassium || 0}
+                      timestamp={latestReading?.timestamp || null}
+                      hasValidData={hasValidData}
+                    />
+                  )
+                })
+              })()}
             </div>
           ) : (
             <div className="text-center py-8">

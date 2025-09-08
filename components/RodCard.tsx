@@ -7,10 +7,14 @@ export type RodCardProps = {
   n: number;
   p: number;
   k: number;
+  timestamp: Date | null;
+  hasValidData?: boolean;
 };
 
-export default function RodCard({ id, temperature, moisture, ph, conductivity, n, p, k }: RodCardProps) {
+export default function RodCard({ id, temperature, moisture, ph, conductivity, n, p, k, timestamp, hasValidData = true }: RodCardProps) {
   const getStatusColor = (value: number, type: string) => {
+    if (!hasValidData) return 'text-red-600'
+    
     switch (type) {
       case 'moisture':
         if (value < 10) return 'text-red-600'
@@ -81,6 +85,22 @@ export default function RodCard({ id, temperature, moisture, ph, conductivity, n
             </div>
           </div>
         </div>
+        
+        {timestamp && (
+          <div className="pt-3 mt-3 border-t border-gray-100">
+            <div className="text-xs text-gray-500">
+              Last update: {new Date(timestamp).toLocaleString()}
+            </div>
+          </div>
+        )}
+        
+        {!hasValidData && (
+          <div className="pt-3 mt-3 border-t border-red-100">
+            <div className="text-xs text-red-600 font-medium">
+              ⚠️ Missing from latest update
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

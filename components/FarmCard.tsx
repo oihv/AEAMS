@@ -87,19 +87,19 @@ export default function FarmCard({ farm }: FarmCardProps) {
 
           {readings && (
             <div className="pt-3 border-t border-gray-100">
-              <div className="text-xs text-gray-500 mb-2">Latest Averages:</div>
+              <div className="text-xs text-gray-700 font-medium mb-2">Latest Averages:</div>
               <div className="grid grid-cols-3 gap-2 text-xs">
                 <div className="text-center">
-                  <div className="font-medium">{readings.avgTemp.toFixed(1)}°C</div>
-                  <div className="text-gray-500">Temp</div>
+                  <div className="font-semibold text-gray-900">{readings.avgTemp.toFixed(1)}°C</div>
+                  <div className="text-gray-600">Temp</div>
                 </div>
                 <div className="text-center">
-                  <div className="font-medium">{readings.avgMoisture.toFixed(0)}%</div>
-                  <div className="text-gray-500">Moisture</div>
+                  <div className="font-semibold text-gray-900">{readings.avgMoisture.toFixed(0)}%</div>
+                  <div className="text-gray-600">Moisture</div>
                 </div>
                 <div className="text-center">
-                  <div className="font-medium">{readings.avgPh.toFixed(1)}</div>
-                  <div className="text-gray-500">pH</div>
+                  <div className="font-semibold text-gray-900">{readings.avgPh.toFixed(1)}</div>
+                  <div className="text-gray-600">pH</div>
                 </div>
               </div>
             </div>

@@ -1,0 +1,34 @@
+{
+  "description": "Single rod basic sensor reading - Perfect for testing basic API functionality",
+  "url": "https://aeams-test-production.up.railway.app/api/rod/justintul",
+  "method": "POST",
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "secret": "AEAMS_SECRET_zhmaj9w00ag",
+    "readings": [
+      {
+        "rod_id": 1,
+        "secret": "AEAMS_SECRET_zhmaj9w00ag",
+        "timestamp": "2025-09-08T12:00:00Z",
+        "temperature": 25.5,
+        "moisture": 65.0,
+        "ph": 6.8,
+        "conductivity": 1.4,
+        "nitrogen": 22.0,
+        "phosphorus": 12.0,
+        "potassium": 18.0
+      }
+    ]
+  },
+  "notes": {
+    "temperature": "25.5°C - Optimal for most crops",
+    "moisture": "65% - Good soil moisture level",
+    "ph": "6.8 - Slightly acidic, good for nutrient uptake",
+    "conductivity": "1.4 mS/cm - Moderate nutrient concentration",
+    "nitrogen": "22 ppm - Moderate nitrogen for balanced growth",
+    "phosphorus": "12 ppm - Standard phosphorus level",
+    "potassium": "18 ppm - Good potassium for plant health"
+  }
+}

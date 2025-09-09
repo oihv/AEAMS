@@ -1,0 +1,78 @@
+{
+  "description": "Multiple rods batch submission - Test sending data to multiple sensors simultaneously",
+  "url": "https://aeams-test-production.up.railway.app/api/rod/justintul",
+  "method": "POST",
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "secret": "AEAMS_SECRET_zhmaj9w00ag",
+    "readings": [
+      {
+        "rod_id": 1,
+        "secret": "AEAMS_SECRET_zhmaj9w00ag",
+        "timestamp": "2025-09-08T12:00:00Z",
+        "temperature": 24.5,
+        "moisture": 62.0,
+        "ph": 6.7,
+        "conductivity": 1.3,
+        "nitrogen": 20.0,
+        "phosphorus": 10.0,
+        "potassium": 15.0
+      },
+      {
+        "rod_id": 2,
+        "secret": "AEAMS_SECRET_zhmaj9w00ag",
+        "timestamp": "2025-09-08T12:00:00Z",
+        "temperature": 25.8,
+        "moisture": 68.0,
+        "ph": 6.9,
+        "conductivity": 1.5,
+        "nitrogen": 22.0,
+        "phosphorus": 11.0,
+        "potassium": 17.0
+      },
+      {
+        "rod_id": 3,
+        "secret": "AEAMS_SECRET_zhmaj9w00ag",
+        "timestamp": "2025-09-08T12:00:00Z",
+        "temperature": 26.2,
+        "moisture": 64.0,
+        "ph": 6.8,
+        "conductivity": 1.4,
+        "nitrogen": 21.0,
+        "phosphorus": 12.0,
+        "potassium": 16.0
+      }
+    ]
+  },
+  "expected_response": {
+    "message": "Data received successfully",
+    "farm_id": "cmeqgslzj0001k104enme45mg",
+    "main_rod_id": "justintul",
+    "processed_readings": 3,
+    "readings": [
+      {
+        "rod_id": "1",
+        "reading_id": "unique_id_1",
+        "status": "success"
+      },
+      {
+        "rod_id": "2", 
+        "reading_id": "unique_id_2",
+        "status": "success"
+      },
+      {
+        "rod_id": "3",
+        "reading_id": "unique_id_3", 
+        "status": "success"
+      }
+    ]
+  },
+  "notes": {
+    "scenario": "Three sensors in different zones of a farm",
+    "rod_1": "Zone A - Slightly cooler area",
+    "rod_2": "Zone B - Warmer, more humid area", 
+    "rod_3": "Zone C - Moderate conditions"
+  }
+}

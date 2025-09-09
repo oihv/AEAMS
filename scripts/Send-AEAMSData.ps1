@@ -35,13 +35,28 @@ $Colors = @{
 function Write-ColoredOutput {
     param([string]$Type, [string]$Message)
     $Color = $Colors[$Type]
-    switch ($Type) {
-        "Success" { Write-Host "✅ $Message" -ForegroundColor $Color }
-        "Error" { Write-Host "❌ $Message" -ForegroundColor $Color }
-        "Warning" { Write-Host "⚠️  $Message" -ForegroundColor $Color }
-        "Info" { Write-Host "🔍 $Message" -ForegroundColor $Color }
-        "Header" { Write-Host "🌱 $Message" -ForegroundColor $Color }
-        "Highlight" { Write-Host "📋 $Message" -ForegroundColor $Color }
+    
+    # Detect if running from batch file and use simpler symbols
+    $isBatchMode = $env:COMSPEC -and ($Host.Name -eq "ConsoleHost")
+    
+    if ($isBatchMode) {
+        switch ($Type) {
+            "Success" { Write-Host "[OK] $Message" -ForegroundColor $Color }
+            "Error" { Write-Host "[ERROR] $Message" -ForegroundColor $Color }
+            "Warning" { Write-Host "[WARN] $Message" -ForegroundColor $Color }
+            "Info" { Write-Host "[INFO] $Message" -ForegroundColor $Color }
+            "Header" { Write-Host "[AEAMS] $Message" -ForegroundColor $Color }
+            "Highlight" { Write-Host "[CONFIG] $Message" -ForegroundColor $Color }
+        }
+    } else {
+        switch ($Type) {
+            "Success" { Write-Host "[OK] $Message" -ForegroundColor $Color }
+            "Error" { Write-Host "[ERROR] $Message" -ForegroundColor $Color }
+            "Warning" { Write-Host "[WARN] $Message" -ForegroundColor $Color }
+            "Info" { Write-Host "[INFO] $Message" -ForegroundColor $Color }
+            "Header" { Write-Host "[AEAMS] $Message" -ForegroundColor $Color }
+            "Highlight" { Write-Host "[CONFIG] $Message" -ForegroundColor $Color }
+        }
     }
 }
 
@@ -59,10 +74,13 @@ function Show-Help {
     Write-Host "   .\Send-AEAMSData.ps1 -Interactive" -ForegroundColor Gray
     Write-Host ""
     Write-Host "3. Target specific rod numbers:" -ForegroundColor White
-    Write-Host "   .\Send-AEAMSData.ps1 -MainRodId 'farm_01' -SecondaryRodId 1 -Temperature 25.4" -ForegroundColor Gray
+    Write-Host "   .\Send-AEAMSData.ps1 -MainRodId 'justintul' -SecondaryRodId 1 -Temperature 25.4" -ForegroundColor Gray
     Write-Host ""
     Write-Host "4. Target multiple rod numbers (batch mode):" -ForegroundColor White
-    Write-Host "   .\Send-AEAMSData.ps1 -MainRodId 'farm_01' -SecondaryRodIds @(1,2,3) -BatchMode" -ForegroundColor Gray
+    Write-Host "   .\Send-AEAMSData.ps1 -MainRodId 'justintul' -SecondaryRodIds @(1,2,3) -BatchMode" -ForegroundColor Gray
+    Write-Host ""
+    Write-Host "5. Send NPK values to specific rods:" -ForegroundColor White
+    Write-Host "   .\Send-AEAMSData.ps1 -SecondaryRodId 2 -Nitrogen 25.0 -Phosphorus 10.0 -Potassium 15.0" -ForegroundColor Gray
     Write-Host ""
     Write-Host "PARAMETERS:" -ForegroundColor Yellow
     Write-Host "  -ConfigFile      Path to JSON configuration file" -ForegroundColor White
@@ -88,9 +106,21 @@ function Show-Help {
     Write-Host "  - field-config.json (outdoor field setup)" -ForegroundColor Gray
     Write-Host "  - hydroponic-config.json (hydroponic system)" -ForegroundColor Gray
     Write-Host ""
+    Write-Host "ABOUT THE SECRET KEY:" -ForegroundColor Yellow
+    Write-Host "  The secret key authenticates your sensor data with the AEAMS API." -ForegroundColor White
+    Write-Host "  Default: AEAMS_SECRET_zhmaj9w00ag (stored in the database)" -ForegroundColor Gray
+    Write-Host "  - You can change it using the /api/setup-rod-secret endpoint" -ForegroundColor Gray  
+    Write-Host "  - It prevents unauthorized sensors from sending fake data" -ForegroundColor Gray
+    Write-Host "  - All rod readings must include this secret to be accepted" -ForegroundColor Gray
+    Write-Host ""
+    Write-Host "NPK NUTRIENT GUIDE:" -ForegroundColor Yellow
+    Write-Host "  Nitrogen (N):   Leaf/stem growth | Vegetative: 20-30 ppm | Flowering: 10-20 ppm" -ForegroundColor White
+    Write-Host "  Phosphorus (P): Root/flower dev | Vegetative: 5-15 ppm  | Flowering: 20-40 ppm" -ForegroundColor White  
+    Write-Host "  Potassium (K):  Disease resist   | Vegetative: 10-20 ppm | Fruiting: 30-50 ppm" -ForegroundColor White
+    Write-Host ""
 }
 
-function Load-Configuration {
+function Read-Configuration {
     param([string]$FilePath)
     
     if (-not (Test-Path $FilePath)) {
@@ -109,14 +139,14 @@ function Load-Configuration {
     }
 }
 
-function Validate-SensorData {
+function Test-SensorData {
     param($Data)
     
     $ValidationRules = @{
-        Temperature = @{ Min = -50; Max = 100; Unit = "°C" }
-        Moisture = @{ Min = 0; Max = 100; Unit = "%" }
+        Temperature = @{ Min = -50; Max = 1000; Unit = "°C" }
+        Moisture = @{ Min = 0; Max = 1000; Unit = "%" }
         Ph = @{ Min = 0; Max = 14; Unit = "" }
-        Conductivity = @{ Min = 0; Max = 10; Unit = "mS/cm" }
+        Conductivity = @{ Min = 0; Max = 1000; Unit = "mS/cm" }
         Nitrogen = @{ Min = 0; Max = 1000; Unit = "ppm" }
         Phosphorus = @{ Min = 0; Max = 1000; Unit = "ppm" }
         Potassium = @{ Min = 0; Max = 1000; Unit = "ppm" }
@@ -147,49 +177,132 @@ function Get-InteractiveInput {
     Write-Host "================================================================" -ForegroundColor Blue
     Write-Host ""
     
-    $Config = @{
-        api = @{
-            url = Read-Host "API URL [https://aeams-test-production.up.railway.app]"
-            secret = Read-Host "API Secret [AEAMS_SECRET_zhmaj9w00ag]"
+    # Rod Configuration
+    Write-ColoredOutput "Highlight" "Rod Configuration"
+    $MainRod = Read-Host "Main Rod ID (farm controller) [justintul]"
+    if (-not $MainRod) { $MainRod = "justintul" }
+    
+    # Secondary Rod Selection with multiple options
+    Write-Host ""
+    Write-ColoredOutput "Info" "Secondary Rod Selection Options:"
+    Write-Host "  1. Single rod (e.g., 1, 2, 3, etc.)"
+    Write-Host "  2. Multiple rods (e.g., 1,2,3)"
+    Write-Host "  3. Range of rods (e.g., 1-5)"
+    Write-Host ""
+    
+    $SecondaryRodInput = Read-Host "Enter secondary rod(s) [1]"
+    if (-not $SecondaryRodInput) { $SecondaryRodInput = "1" }
+    
+    # Parse secondary rod input
+    $SecondaryRods = @()
+    if ($SecondaryRodInput -match "(\d+)-(\d+)") {
+        # Range input (e.g., 1-5)
+        $start = [int]$matches[1]
+        $end = [int]$matches[2]
+        for ($i = $start; $i -le $end; $i++) {
+            $SecondaryRods += $i
         }
-        farm = @{
-            main_rod_id = Read-Host "Main Rod ID [justintul]"
-            secondary_rod_id = Read-Host "Secondary Rod ID [sensor_01]"
-        }
-        sensor_data = @{}
+        Write-ColoredOutput "Info" "Parsed range: $($SecondaryRods -join ', ')"
+    } elseif ($SecondaryRodInput -contains ",") {
+        # Comma-separated input (e.g., 1,2,3)
+        $SecondaryRods = $SecondaryRodInput -split "," | ForEach-Object { [int]$_.Trim() }
+        Write-ColoredOutput "Info" "Parsed multiple rods: $($SecondaryRods -join ', ')"
+    } else {
+        # Single rod input
+        $SecondaryRods = @([int]$SecondaryRodInput)
+        Write-ColoredOutput "Info" "Parsed single rod: $SecondaryRods"
     }
     
-    # Set defaults if empty
-    if (-not $Config.api.url) { $Config.api.url = "https://aeams-test-production.up.railway.app" }
-    if (-not $Config.api.secret) { $Config.api.secret = "AEAMS_SECRET_zhmaj9w00ag" }
-    if (-not $Config.farm.main_rod_id) { $Config.farm.main_rod_id = "justintul" }
-    if (-not $Config.farm.secondary_rod_id) { $Config.farm.secondary_rod_id = "sensor_01" }
-    
+    # API Configuration
     Write-Host ""
-    Write-Host "Enter sensor readings (press Enter for random values):" -ForegroundColor Yellow
+    Write-ColoredOutput "Highlight" "API Configuration"
+    $ApiUrl = Read-Host "API URL [https://aeams-test-production.up.railway.app]"
+    if (-not $ApiUrl) { $ApiUrl = "https://aeams-test-production.up.railway.app" }
     
-    $TempInput = Read-Host "Temperature (°C) [random 20-30]"
-    $Config.sensor_data.temperature = if ($TempInput) { [double]$TempInput } else { Get-Random -Minimum 20 -Maximum 30 }
+    $Secret = Read-Host "API Secret [AEAMS_SECRET_zhmaj9w00ag]"
+    if (-not $Secret) { $Secret = "AEAMS_SECRET_zhmaj9w00ag" }
     
-    $MoistInput = Read-Host "Moisture (%) [random 40-70]"
-    $Config.sensor_data.moisture = if ($MoistInput) { [double]$MoistInput } else { Get-Random -Minimum 40 -Maximum 70 }
+    # Sensor Data Configuration
+    Write-Host ""
+    Write-ColoredOutput "Highlight" "Environmental Sensor Data"
     
-    $PhInput = Read-Host "pH [random 6.0-7.5]"
-    $Config.sensor_data.ph = if ($PhInput) { [double]$PhInput } else { (Get-Random -Minimum 60 -Maximum 75) / 10 }
+    $Temperature = Read-Host "Temperature (°C) [23.5]"
+    if (-not $Temperature) { $Temperature = 23.5 } else { $Temperature = [double]$Temperature }
     
-    $CondInput = Read-Host "Conductivity (mS/cm) [random 0.8-2.0]"
-    $Config.sensor_data.conductivity = if ($CondInput) { [double]$CondInput } else { (Get-Random -Minimum 8 -Maximum 20) / 10 }
+    $Moisture = Read-Host "Moisture (%) [45.2]"
+    if (-not $Moisture) { $Moisture = 45.2 } else { $Moisture = [double]$Moisture }
     
-    $NInput = Read-Host "Nitrogen (ppm) [random 10-25]"
-    $Config.sensor_data.nitrogen = if ($NInput) { [double]$NInput } else { Get-Random -Minimum 10 -Maximum 25 }
+    $Ph = Read-Host "pH Level (0-14) [6.8]"
+    if (-not $Ph) { $Ph = 6.8 } else { $Ph = [double]$Ph }
     
-    $PInput = Read-Host "Phosphorus (ppm) [random 5-15]"
-    $Config.sensor_data.phosphorus = if ($PInput) { [double]$PInput } else { Get-Random -Minimum 5 -Maximum 15 }
+    $Conductivity = Read-Host "Electrical Conductivity (mS/cm) [1.2]"
+    if (-not $Conductivity) { $Conductivity = 1.2 } else { $Conductivity = [double]$Conductivity }
     
-    $KInput = Read-Host "Potassium (ppm) [random 15-30]"
-    $Config.sensor_data.potassium = if ($KInput) { [double]$KInput } else { Get-Random -Minimum 15 -Maximum 30 }
+    # NPK Values (Nitrogen, Phosphorus, Potassium)
+    Write-Host ""
+    Write-ColoredOutput "Highlight" "NPK Nutrient Levels (Essential Plant Nutrients)"
+    Write-Host "  Nitrogen (N):   Promotes leaf and stem growth"
+    Write-Host "  Phosphorus (P): Essential for root development and flowering"
+    Write-Host "  Potassium (K):  Improves disease resistance and water regulation"
+    Write-Host ""
     
-    return $Config
+    $Nitrogen = Read-Host "Nitrogen (N) - ppm [12.5]"
+    if (-not $Nitrogen) { $Nitrogen = 12.5 } else { $Nitrogen = [double]$Nitrogen }
+    
+    $Phosphorus = Read-Host "Phosphorus (P) - ppm [8.3]"
+    if (-not $Phosphorus) { $Phosphorus = 8.3 } else { $Phosphorus = [double]$Phosphorus }
+    
+    $Potassium = Read-Host "Potassium (K) - ppm [15.7]"
+    if (-not $Potassium) { $Potassium = 15.7 } else { $Potassium = [double]$Potassium }
+    
+    # Quick NPK presets
+    Write-Host ""
+    Write-ColoredOutput "Info" "Quick NPK Presets Available:"
+    Write-Host "  Would you like to use a preset instead? (y/N): " -NoNewline
+    $usePreset = Read-Host
+    
+    if ($usePreset -eq "y" -or $usePreset -eq "Y") {
+        Write-Host ""
+        Write-Host "Available Presets:"
+        Write-Host "  1. Vegetative Growth (High N): N=25, P=10, K=15"
+        Write-Host "  2. Flowering Stage (High P): N=15, P=30, K=25"
+        Write-Host "  3. Fruiting Stage (High K): N=10, P=15, K=35"
+        Write-Host "  4. Balanced Growth: N=20, P=20, K=20"
+        Write-Host "  5. Hydroponic Mix: N=150, P=50, K=200"
+        Write-Host ""
+        
+        $preset = Read-Host "Select preset (1-5) [keep current values]"
+        
+        switch ($preset) {
+            "1" { $Nitrogen = 25; $Phosphorus = 10; $Potassium = 15; Write-ColoredOutput "Success" "Applied Vegetative Growth preset" }
+            "2" { $Nitrogen = 15; $Phosphorus = 30; $Potassium = 25; Write-ColoredOutput "Success" "Applied Flowering Stage preset" }
+            "3" { $Nitrogen = 10; $Phosphorus = 15; $Potassium = 35; Write-ColoredOutput "Success" "Applied Fruiting Stage preset" }
+            "4" { $Nitrogen = 20; $Phosphorus = 20; $Potassium = 20; Write-ColoredOutput "Success" "Applied Balanced Growth preset" }
+            "5" { $Nitrogen = 150; $Phosphorus = 50; $Potassium = 200; Write-ColoredOutput "Success" "Applied Hydroponic Mix preset" }
+            default { Write-ColoredOutput "Info" "Keeping manually entered values" }
+        }
+    }
+    
+    return @{
+        api = @{
+            url = $ApiUrl
+            secret = $Secret
+        }
+        farm = @{
+            main_rod_id = $MainRod
+            secondary_rod_id = $SecondaryRods[0]
+            secondary_rod_ids = $SecondaryRods
+        }
+        sensor_data = @{
+            temperature = $Temperature
+            moisture = $Moisture
+            ph = $Ph
+            conductivity = $Conductivity
+            nitrogen = $Nitrogen
+            phosphorus = $Phosphorus
+            potassium = $Potassium
+        }
+    }
 }
 
 function Send-SensorData {
@@ -242,33 +355,30 @@ function Send-SensorData {
     try {
         # Test API health first
         Write-ColoredOutput "Info" "Testing API health..."
-        $HealthResponse = curl.exe -X GET "$($Config.api.url)/api/health" 2>$null
-        
-        if ($HealthResponse -like "*OK*" -or $HealthResponse -like "*success*") {
+        try {
+            Invoke-RestMethod -Uri "$($Config.api.url)/api/health" -Method GET -ErrorAction Stop | Out-Null
             Write-ColoredOutput "Success" "API is responding"
-        } else {
-            Write-ColoredOutput "Warning" "API health check returned: $HealthResponse"
+        } catch {
+            Write-ColoredOutput "Warning" "API health check failed: $($_.Exception.Message)"
         }
         
         # Send sensor data
         Write-ColoredOutput "Info" "Sending sensor data..."
-        $Response = curl.exe -X POST $ApiEndpoint -H "Content-Type: application/json" -d $Payload 2>$null
+        $Response = Invoke-RestMethod -Uri $ApiEndpoint -Method POST -Body $Payload -ContentType "application/json" -ErrorAction Stop
         
-        if ($Response -like "*Data received successfully*" -or $Response -like "*success*") {
-            Write-ColoredOutput "Success" "Data sent successfully!"
-            Write-Host ""
-            Write-Host "API Response:" -ForegroundColor Green
-            Write-Host $Response -ForegroundColor White
-        } else {
-            Write-ColoredOutput "Error" "Failed to send data"
-            Write-Host ""
-            Write-Host "API Response:" -ForegroundColor Red
-            Write-Host $Response -ForegroundColor White
-        }
+        Write-ColoredOutput "Success" "Data sent successfully!"
+        Write-Host ""
+        Write-Host "API Response:" -ForegroundColor Green
+        Write-Host ($Response | ConvertTo-Json) -ForegroundColor White
         
     }
     catch {
         Write-ColoredOutput "Error" "Network error: $($_.Exception.Message)"
+        if ($_.ErrorDetails.Message) {
+            Write-Host ""
+            Write-Host "Error Details:" -ForegroundColor Red
+            Write-Host $_.ErrorDetails.Message -ForegroundColor White
+        }
     }
 }
 
@@ -311,7 +421,7 @@ $Config = @{
 
 # Load configuration file if specified
 if ($ConfigFile) {
-    $LoadedConfig = Load-Configuration $ConfigFile
+    $LoadedConfig = Read-Configuration $ConfigFile
     if ($LoadedConfig) {
         $Config = $LoadedConfig
     } else {
@@ -329,6 +439,15 @@ if ($ApiUrl) { $Config.api.url = $ApiUrl }
 if ($Secret) { $Config.api.secret = $Secret }
 if ($MainRodId) { $Config.farm.main_rod_id = $MainRodId }
 
+# Override sensor data with command line parameters
+if ($Temperature -ne $null) { $Config.sensor_data.temperature = $Temperature }
+if ($Moisture -ne $null) { $Config.sensor_data.moisture = $Moisture }
+if ($Ph -ne $null) { $Config.sensor_data.ph = $Ph }
+if ($Conductivity -ne $null) { $Config.sensor_data.conductivity = $Conductivity }
+if ($Nitrogen -ne $null) { $Config.sensor_data.nitrogen = $Nitrogen }
+if ($Phosphorus -ne $null) { $Config.sensor_data.phosphorus = $Phosphorus }
+if ($Potassium -ne $null) { $Config.sensor_data.potassium = $Potassium }
+
 # Handle secondary rod targeting
 if ($SecondaryRodIds -and $SecondaryRodIds.Count -gt 0) {
     $Config.farm.secondary_rod_ids = $SecondaryRodIds
@@ -338,13 +457,6 @@ if ($SecondaryRodIds -and $SecondaryRodIds.Count -gt 0) {
     $Config.farm.secondary_rod_ids = @($SecondaryRodId)
     Write-ColoredOutput "Info" "Targeting single secondary rod: $SecondaryRodId"
 }
-if ($null -ne $Temperature) { $Config.sensor_data.temperature = $Temperature }
-if ($null -ne $Moisture) { $Config.sensor_data.moisture = $Moisture }
-if ($null -ne $Ph) { $Config.sensor_data.ph = $Ph }
-if ($null -ne $Conductivity) { $Config.sensor_data.conductivity = $Conductivity }
-if ($null -ne $Nitrogen) { $Config.sensor_data.nitrogen = $Nitrogen }
-if ($null -ne $Phosphorus) { $Config.sensor_data.phosphorus = $Phosphorus }
-if ($null -ne $Potassium) { $Config.sensor_data.potassium = $Potassium }
 
 # Display current configuration
 Write-ColoredOutput "Highlight" "Current Rod Targeting Configuration:"
@@ -364,7 +476,7 @@ Write-Host "  Potassium:      $($Config.sensor_data.potassium) ppm" -ForegroundC
 Write-Host ""
 
 # Validate sensor data
-Validate-SensorData $Config.sensor_data
+Test-SensorData $Config.sensor_data
 
 # Confirm before sending
 if (-not $Interactive) {

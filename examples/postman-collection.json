@@ -1,0 +1,149 @@
+{
+  "description": "Postman Collection for AEAMS API Testing",
+  "info": {
+    "name": "AEAMS API Test Collection",
+    "description": "Complete collection for testing AEAMS agricultural monitoring API",
+    "version": "1.0.0"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://aeams-test-production.up.railway.app",
+      "type": "string"
+    },
+    {
+      "key": "secret_key",
+      "value": "AEAMS_SECRET_zhmaj9w00ag",
+      "type": "string"
+    },
+    {
+      "key": "main_rod_id",
+      "value": "justintul",
+      "type": "string"
+    },
+    {
+      "key": "timestamp",
+      "value": "{{$isoTimestamp}}",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/health",
+          "host": ["{{base_url}}"],
+          "path": ["api", "health"]
+        }
+      }
+    },
+    {
+      "name": "Single Rod - Basic Reading",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"secret\": \"{{secret_key}}\",\n  \"readings\": [\n    {\n      \"rod_id\": 1,\n      \"secret\": \"{{secret_key}}\",\n      \"timestamp\": \"{{timestamp}}\",\n      \"temperature\": 25.5,\n      \"moisture\": 65.0,\n      \"ph\": 6.8,\n      \"conductivity\": 1.4,\n      \"nitrogen\": 22.0,\n      \"phosphorus\": 12.0,\n      \"potassium\": 18.0\n    }\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/rod/{{main_rod_id}}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "rod", "{{main_rod_id}}"]
+        }
+      }
+    },
+    {
+      "name": "Multiple Rods - Batch Submission",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"secret\": \"{{secret_key}}\",\n  \"readings\": [\n    {\n      \"rod_id\": 1,\n      \"secret\": \"{{secret_key}}\",\n      \"timestamp\": \"{{timestamp}}\",\n      \"temperature\": 24.5,\n      \"moisture\": 62.0,\n      \"ph\": 6.7,\n      \"conductivity\": 1.3,\n      \"nitrogen\": 20.0,\n      \"phosphorus\": 10.0,\n      \"potassium\": 15.0\n    },\n    {\n      \"rod_id\": 2,\n      \"secret\": \"{{secret_key}}\",\n      \"timestamp\": \"{{timestamp}}\",\n      \"temperature\": 25.8,\n      \"moisture\": 68.0,\n      \"ph\": 6.9,\n      \"conductivity\": 1.5,\n      \"nitrogen\": 22.0,\n      \"phosphorus\": 11.0,\n      \"potassium\": 17.0\n    }\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/rod/{{main_rod_id}}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "rod", "{{main_rod_id}}"]
+        }
+      }
+    },
+    {
+      "name": "Vegetative Growth - High Nitrogen",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"secret\": \"{{secret_key}}\",\n  \"readings\": [\n    {\n      \"rod_id\": 3,\n      \"secret\": \"{{secret_key}}\",\n      \"timestamp\": \"{{timestamp}}\",\n      \"temperature\": 26.0,\n      \"moisture\": 70.0,\n      \"ph\": 6.5,\n      \"conductivity\": 1.8,\n      \"nitrogen\": 28.0,\n      \"phosphorus\": 10.0,\n      \"potassium\": 15.0\n    }\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/rod/{{main_rod_id}}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "rod", "{{main_rod_id}}"]
+        }
+      }
+    },
+    {
+      "name": "Flowering Stage - High Phosphorus",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"secret\": \"{{secret_key}}\",\n  \"readings\": [\n    {\n      \"rod_id\": 4,\n      \"secret\": \"{{secret_key}}\",\n      \"timestamp\": \"{{timestamp}}\",\n      \"temperature\": 24.0,\n      \"moisture\": 60.0,\n      \"ph\": 6.2,\n      \"conductivity\": 2.1,\n      \"nitrogen\": 15.0,\n      \"phosphorus\": 35.0,\n      \"potassium\": 28.0\n    }\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/rod/{{main_rod_id}}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "rod", "{{main_rod_id}}"]
+        }
+      }
+    },
+    {
+      "name": "Hydroponic System - High Concentration",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"secret\": \"{{secret_key}}\",\n  \"readings\": [\n    {\n      \"rod_id\": 5,\n      \"secret\": \"{{secret_key}}\",\n      \"timestamp\": \"{{timestamp}}\",\n      \"temperature\": 22.0,\n      \"moisture\": 95.0,\n      \"ph\": 5.8,\n      \"conductivity\": 2.8,\n      \"nitrogen\": 180.0,\n      \"phosphorus\": 60.0,\n      \"potassium\": 240.0\n    }\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/rod/{{main_rod_id}}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "rod", "{{main_rod_id}}"]
+        }
+      }
+    }
+  ]
+}

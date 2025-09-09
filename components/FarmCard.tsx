@@ -75,14 +75,14 @@ export default function FarmCard({ farm }: FarmCardProps) {
         <div className="space-y-3">
           <div className="flex justify-between text-sm">
             <span className="text-gray-600">Main Rod:</span>
-            <span className="font-medium text-gray-600">
+            <span className="font-semibold text-gray-800">
               {hasMainRod ? farm.mainRod?.rodId : 'Not connected'}
             </span>
           </div>
           
           <div className="flex justify-between text-sm">
             <span className="text-gray-600">Secondary Rods:</span>
-            <span className="font-medium text-gray-600">{secondaryRodCount}</span>
+            <span className="font-semibold text-gray-800">{secondaryRodCount}</span>
           </div>
 
           {readings && (

@@ -103,6 +103,8 @@ model SecondaryRod {
   mainRod   MainRod   @relation(fields: [mainRodId], references: [id], onDelete: Cascade)
   isActive  Boolean   @default(true) @map("is_active")
   lastSeen  DateTime? @map("last_seen")
+  positionX Float?    @map("position_x") // X coordinate for map view
+  positionY Float?    @map("position_y") // Y coordinate for map view
   readings  Reading[]
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime  @updatedAt @map("updated_at")

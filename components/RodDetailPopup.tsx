@@ -1,19 +1,26 @@
-export type RodCardProps = {
-  id: string;
-  rodId?: string; // Database ID for position persistence
-  temperature: number;
-  moisture: number;
-  ph: number;
-  conductivity: number;
-  n: number;
-  p: number;
-  k: number;
-  timestamp: Date | null;
-  hasValidData?: boolean;
-  isEditMode?: boolean;
-};
+"use client";
 
-export default function RodCard({ id, temperature, moisture, ph, conductivity, n, p, k, timestamp, hasValidData = true, isEditMode = false }: RodCardProps) {
+import { RodCardProps } from './RodCard';
+
+interface RodDetailPopupProps extends RodCardProps {
+  isVisible: boolean;
+  position: { x: number; y: number };
+}
+
+export default function RodDetailPopup({ 
+  id, 
+  temperature, 
+  moisture, 
+  ph, 
+  conductivity, 
+  n, 
+  p, 
+  k, 
+  timestamp, 
+  hasValidData = true,
+  isVisible,
+  position
+}: RodDetailPopupProps) {
   const getStatusColor = (value: number, type: string) => {
     if (!hasValidData) return 'text-red-600'
     
@@ -33,24 +40,44 @@ export default function RodCard({ id, temperature, moisture, ph, conductivity, n
     }
   }
 
+  if (!isVisible) return null;
+
+  // Calculate popup positioning to prevent off-screen display
+  const popupWidth = 320; // w-80 = 320px
+  const popupHeight = 240; // approximate height
+  const offset = 10;
+  
+  const windowWidth = typeof window !== 'undefined' ? window.innerWidth : 1920;
+  
+  let left = position.x + offset;
+  let top = position.y - popupHeight - offset;
+  
+  // Adjust horizontal position if popup would go off-screen
+  if (left + popupWidth > windowWidth) {
+    left = position.x - popupWidth - offset;
+  }
+  
+  // Adjust vertical position if popup would go off-screen
+  if (top < 0) {
+    top = position.y + offset;
+  }
+
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-md transition-shadow">
-      <div className="flex items-center justify-between mb-4">
+    <div 
+      className="fixed z-[2000] bg-white rounded-lg border border-gray-200 shadow-lg p-4 w-80 pointer-events-none"
+      style={{
+        left: `${left}px`,
+        top: `${top}px`,
+      }}
+    >
+      <div className="flex items-center justify-between mb-3">
         <h3 className="text-lg font-semibold text-gray-900">
-          {isNaN(Number(id)) ? id : `Rod ${id}`}</h3>
-        <div className="flex items-center gap-2">
-          {isEditMode && (
-            <div className="cursor-grab active:cursor-grabbing">
-              <svg width="20" height="20" viewBox="0 0 20 20" className="text-gray-400">
-                <path fill="currentColor" d="M7 2a2 2 0 1 1 .001 4.001A2 2 0 0 1 7 2zm0 6a2 2 0 1 1 .001 4.001A2 2 0 0 1 7 8zm0 6a2 2 0 1 1 .001 4.001A2 2 0 0 1 7 14zm6-8a2 2 0 1 1-.001-4.001A2 2 0 0 1 13 6zm0 2a2 2 0 1 1 .001 4.001A2 2 0 0 1 13 8zm0 6a2 2 0 1 1 .001 4.001A2 2 0 0 1 13 14z"/>
-              </svg>
-            </div>
-          )}
-          <div className={`w-3 h-3 rounded-full ${hasValidData ? 'bg-green-400' : 'bg-red-500'}`}></div>
-        </div>
+          {isNaN(Number(id)) ? id : `Rod ${id}`}
+        </h3>
+        <div className={`w-3 h-3 rounded-full ${hasValidData ? 'bg-green-500' : 'bg-red-500'}`}></div>
       </div>
       
-      <div className="space-y-3">
+      <div className="space-y-2 text-sm">
         <div className="flex justify-between">
           <span className="text-gray-600">Temperature:</span>
           <span className={`font-medium ${getStatusColor(temperature, 'temperature')}`}>
@@ -79,8 +106,8 @@ export default function RodCard({ id, temperature, moisture, ph, conductivity, n
           </span>
         </div>
         
-        <div className="pt-3 border-t border-gray-100">
-          <div className="text-xs text-gray-500 mb-2">NPK Levels:</div>
+        <div className="pt-2 border-t border-gray-100">
+          <div className="text-xs text-gray-500 mb-1">NPK Levels:</div>
           <div className="grid grid-cols-3 gap-2 text-xs">
             <div className="text-center">
               <div className="font-medium text-gray-900">{n}</div>
@@ -98,7 +125,7 @@ export default function RodCard({ id, temperature, moisture, ph, conductivity, n
         </div>
         
         {timestamp && (
-          <div className="pt-3 mt-3 border-t border-gray-100">
+          <div className="pt-2 mt-2 border-t border-gray-100">
             <div className="text-xs text-gray-500">
               Last update: {new Date(timestamp).toLocaleString()}
             </div>
@@ -106,7 +133,7 @@ export default function RodCard({ id, temperature, moisture, ph, conductivity, n
         )}
         
         {!hasValidData && (
-          <div className="pt-3 mt-3 border-t border-red-100">
+          <div className="pt-2 mt-2 border-t border-red-100">
             <div className="text-xs text-red-600 font-medium">
               ⚠️ Missing from latest update
             </div>
@@ -116,4 +143,3 @@ export default function RodCard({ id, temperature, moisture, ph, conductivity, n
     </div>
   );
 }
-

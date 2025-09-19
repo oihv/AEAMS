@@ -29,9 +29,10 @@ interface FarmCardProps {
       }>
     }
   }
+  isEditMode?: boolean
 }
 
-export default function FarmCard({ farm }: FarmCardProps) {
+export default function FarmCard({ farm, isEditMode = false }: FarmCardProps) {
   const hasMainRod = !!farm.mainRod
   const secondaryRodCount = farm.mainRod?.secondaryRods?.length || 0
   
@@ -54,7 +55,7 @@ export default function FarmCard({ farm }: FarmCardProps) {
   const readings = getLatestReadings()
 
   return (
-    <Link href={`/dashboard/farm/${farm.id}`}>
+    <Link href={`/dashboard/farm/${farm.id}`} className={isEditMode ? 'pointer-events-none' : ''}>
       <div className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg transition-shadow cursor-pointer">
         <div className="flex items-start justify-between mb-4">
           <div>

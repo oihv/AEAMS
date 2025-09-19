@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react"
 import FarmCard from "@/components/FarmCard"
 import CreateFarmModal from "@/components/CreateFarmModal"
+import NotificationMonitor from "@/components/NotificationMonitor"
+import { useNotifications } from "@/components/NotificationProvider"
 import {
   DndContext,
   closestCenter,
@@ -92,6 +94,7 @@ export default function FarmOverview() {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [isEditMode, setIsEditMode] = useState(false)
   const [sortedFarms, setSortedFarms] = useState<Farm[]>([])
+  const { addNotification } = useNotifications();
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -159,7 +162,7 @@ export default function FarmOverview() {
                   readings: [
                     {
                       temperature: 23.5,
-                      moisture: 45.2,
+                      moisture: 8.2, // Low moisture - will trigger notification
                       ph: 6.8,
                       conductivity: 1.2,
                       nitrogen: 12.5,
@@ -176,9 +179,9 @@ export default function FarmOverview() {
                   location: 'South Section',
                   readings: [
                     {
-                      temperature: 25.1,
+                      temperature: 37.8, // High temperature - will trigger notification
                       moisture: 48.7,
-                      ph: 7.1,
+                      ph: 5.2, // Low pH - will trigger notification
                       conductivity: 1.4,
                       nitrogen: 14.2,
                       phosphorus: 9.8,
@@ -196,12 +199,15 @@ export default function FarmOverview() {
         setSortedFarms(orderedFarms)
       } else {
         // Normal API call for production
-        const response = await fetch("/api/farms")
+        const response = await fetch("/api/debug-farm-data") // Use debug endpoint for testing
         if (response.ok) {
           const data = await response.json()
+          console.log('Fetched farms data:', data.farms);
           const orderedFarms = loadFarmOrder(data.farms)
           setFarms(data.farms)
           setSortedFarms(orderedFarms)
+        } else {
+          console.error('Failed to fetch farms:', response.status, response.statusText);
         }
       }
     } catch (error) {
@@ -255,27 +261,59 @@ export default function FarmOverview() {
 
   return (
     <div>
+      {/* Notification Monitor - monitors farms for alerts */}
+      <NotificationMonitor farms={farms} />
+      
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-semibold text-gray-900">Your Farms</h2>
         <div className="flex gap-3">
-          {sortedFarms.length > 0 && (
-            <button
-              onClick={toggleEditMode}
-              className={`px-4 py-2 rounded-xl font-medium transition-colors ${
-                isEditMode
-                  ? 'bg-blue-600 text-white hover:bg-blue-700'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              {isEditMode ? '✓ Done' : '✏️ Edit Layout'}
-            </button>
-          )}
+          {/* {sortedFarms.length > 0 && ( */}
+          {/*   <button */}
+          {/*     onClick={toggleEditMode} */}
+          {/*     className={`px-4 py-2 rounded-xl font-medium transition-colors ${ */}
+          {/*       isEditMode */}
+          {/*         ? 'bg-blue-600 text-white hover:bg-blue-700' */}
+          {/*         : 'bg-gray-100 text-gray-700 hover:bg-gray-200' */}
+          {/*     }`} */}
+          {/*   > */}
+          {/*     {isEditMode ? '✓ Done' : '✏️ Edit Layout'} */}
+          {/*   </button> */}
+          {/* )} */}
           <button
             onClick={() => setShowCreateModal(true)}
             className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl font-medium transition-colors"
           >
             + Add Farm
           </button>
+          <button
+            onClick={() => {
+              console.log('Force refreshing farms...');
+              fetchFarms();
+            }}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-medium transition-colors"
+          >
+            🔄 Refresh
+          </button>
+          {/* <button */}
+          {/*   onClick={() => { */}
+          {/*     console.log('Testing notification...'); */}
+          {/*     addNotification({ */}
+          {/*       farmId: 'test-farm', */}
+          {/*       farmName: 'Test Farm', */}
+          {/*       type: 'high_temperature', */}
+          {/*       title: 'Test Notification', */}
+          {/*       message: 'This is a test notification to check if the system works.', */}
+          {/*       severity: 'high', */}
+          {/*       rodId: 'test-rod', */}
+          {/*       rodName: 'Test Rod', */}
+          {/*       sensorValue: 99, */}
+          {/*       thresholdValue: 50, */}
+          {/*     }); */}
+          {/*   }} */}
+          {/*   className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-xl font-medium transition-colors" */}
+          {/* > */}
+          {/*   🚨 Test Alert */}
+          {/* </button> */}
         </div>
       </div>
 

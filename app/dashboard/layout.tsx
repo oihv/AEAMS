@@ -1,6 +1,7 @@
 import { auth } from "@/auth"
 import { redirect } from "next/navigation"
-import { signOut } from "@/auth"
+import { NotificationProvider } from "@/components/NotificationProvider"
+import DashboardNavbar from "@/components/DashboardNavbar"
 
 export default async function DashboardLayout({
   children,
@@ -14,42 +15,20 @@ export default async function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Dashboard Navigation */}
-      <nav className="bg-green-950 shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-white flex justify-between h-16">
-            <div className="flex items-center">
-              <h1 className="text-xl font-semibold ">AEAMS Dashboard</h1>
-            </div>
-            <div className="flex items-center space-x-4">
-              <span>
-                Welcome, {session.user.name || session.user.email}!
-              </span>
-              <form
-                action={async () => {
-                  "use server"
-                  await signOut({ redirectTo: "/" })
-                }}
-              >
-                <button
-                  type="submit"
-                  className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium"
-                >
-                  Sign Out
-                </button>
-              </form>
-            </div>
-          </div>
-        </div>
-      </nav>
+    <NotificationProvider>
+      <div className="min-h-screen bg-gray-50">
+        {/* Dashboard Navigation */}
+        <DashboardNavbar 
+          userName={session.user.name || session.user.email || 'User'} 
+        />
 
-      {/* Dashboard Content */}
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          {children}
-        </div>
-      </main>
-    </div>
+        {/* Dashboard Content */}
+        <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+          <div className="px-4 py-6 sm:px-0">
+            {children}
+          </div>
+        </main>
+      </div>
+    </NotificationProvider>
   )
 }

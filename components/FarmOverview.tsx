@@ -199,7 +199,7 @@ export default function FarmOverview() {
         setSortedFarms(orderedFarms)
       } else {
         // Normal API call for production
-        const response = await fetch("/api/debug-farm-data") // Use debug endpoint for testing
+        const response = await fetch("/api/farms") 
         if (response.ok) {
           const data = await response.json()
           console.log('Fetched farms data:', data.farms);

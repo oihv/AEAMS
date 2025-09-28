@@ -4,6 +4,8 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import MainRodConnection from "@/components/MainRodConnection"
 import RodGrid from "@/components/RodGrid"
+import AIRecommendations from "@/components/AIRecommendations"
+import MLDashboard from "@/components/MLDashboard"
 import { RodCardProps } from "@/components/RodCard"
 
 interface FarmDetailsProps {
@@ -46,8 +48,13 @@ export default function FarmDetails({ initialFarm }: FarmDetailsProps) {
   const [farm, setFarm] = useState(initialFarm)
   const [showMainRodConnection, setShowMainRodConnection] = useState(false)
   const [isRefreshing, setIsRefreshing] = useState(false)
-  const [lastUpdated, setLastUpdated] = useState<Date>(new Date())
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
   const hasMainRod = !!farm.mainRod
+
+  // Initialize lastUpdated on client side only to prevent hydration mismatch
+  useEffect(() => {
+    setLastUpdated(new Date())
+  }, [])
 
   // Function to fetch fresh farm data
   const refreshFarmData = async () => {
@@ -103,7 +110,7 @@ export default function FarmDetails({ initialFarm }: FarmDetailsProps) {
         {hasMainRod && (
           <div className="flex flex-col items-end gap-2">
             <div className="text-xs text-gray-500">
-              Last updated: {lastUpdated.toLocaleTimeString()}
+              Last updated: {lastUpdated?.toLocaleTimeString() || 'Never'}
             </div>
             <button
               onClick={handleManualRefresh}
@@ -159,6 +166,13 @@ export default function FarmDetails({ initialFarm }: FarmDetailsProps) {
           </div>
         )}
       </div>
+
+      {hasMainRod && (
+        <div className="space-y-8 mb-8">
+          <MLDashboard farmId={farm.id} />
+          <AIRecommendations farmId={farm.id} />
+        </div>
+      )}
 
       {hasMainRod && (
         <div className="bg-white rounded-xl border border-gray-200 p-6">

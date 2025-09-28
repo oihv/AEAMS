@@ -2,7 +2,7 @@ export interface Notification {
   id: string;
   farmId: string;
   farmName: string;
-  type: 'low_moisture' | 'high_temperature' | 'ph_alert' | 'rod_offline' | 'sensor_error';
+  type: 'low_moisture' | 'high_temperature' | 'ph_alert' | 'rod_offline' | 'sensor_error' | 'ai_watering' | 'ai_fertilization' | 'ai_health' | 'data_quality';
   title: string;
   message: string;
   severity: 'low' | 'medium' | 'high' | 'critical';

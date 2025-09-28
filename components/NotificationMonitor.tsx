@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { useNotifications } from './NotificationProvider';
+import { PlantCareAI, type SensorReading } from '@/lib/ai-engine';
 
 interface Farm {
   id: string;
@@ -44,15 +45,15 @@ export default function NotificationMonitor({ farms }: NotificationMonitorProps)
   useEffect(() => {
     if (!farms || farms.length === 0) return;
 
-    // Rate limiting: only process once every 5 seconds
+    // Rate limiting: only process once every 10 seconds
     const now = Date.now();
-    if (now - lastProcessTime.current < 5000) {
+    if (now - lastProcessTime.current < 10000) {
       console.log('NotificationMonitor: Rate limited, skipping processing');
       return;
     }
     lastProcessTime.current = now;
 
-    console.log('NotificationMonitor: Processing farms:', farms.length);
+    console.log('NotificationMonitor: Processing farms with AI:', farms.length);
 
     farms.forEach(farm => {
       console.log(`Processing farm: ${farm.name}`, farm);
@@ -65,162 +66,216 @@ export default function NotificationMonitor({ farms }: NotificationMonitorProps)
       farm.mainRod.secondaryRods.forEach(rod => {
         console.log(`Processing rod: ${rod.name || rod.rodId}`, rod);
         
-        const latestReading = rod.readings?.[0];
-        if (!latestReading) {
+        if (!rod.readings || rod.readings.length === 0) {
           console.log(`Rod ${rod.name || rod.rodId} has no readings`);
           return;
         }
 
-        console.log(`Latest reading for ${rod.name || rod.rodId}:`, latestReading);
-        
         const rodName = rod.name || rod.rodId || 'Unknown Rod';
         
-        // Create unique alert IDs with timestamp to prevent duplicates but allow new alerts for same conditions
+        // Convert readings to AI engine format
+        const sensorReadings: SensorReading[] = rod.readings.map(reading => ({
+          temperature: reading.temperature || null,
+          moisture: reading.moisture || null,
+          ph: reading.ph || null,
+          conductivity: reading.conductivity || null,
+          nitrogen: reading.nitrogen || null,
+          phosphorus: reading.phosphorus || null,
+          potassium: reading.potassium || null,
+          timestamp: new Date(reading.timestamp)
+        }));
+
+        // Generate AI recommendations
+        const aiRecommendation = PlantCareAI.generateRecommendations(rod.rodId, sensorReadings);
+        console.log(`AI recommendations for ${rodName}:`, aiRecommendation);
+
+        // Create unique alert IDs with timestamp
         const createAlertId = (type: string, value?: number) => 
-          `${farm.id}-${rod.rodId}-${type}-${value?.toFixed(1) || 'unknown'}-${new Date(latestReading.timestamp).toISOString().slice(0, 13)}`; // Include hour for uniqueness
+          `${farm.id}-${rod.rodId}-${type}-${value?.toFixed(1) || 'unknown'}-${new Date().toISOString().slice(0, 13)}`;
 
-        // Check for low moisture (below 10%)
-        if (latestReading.moisture !== undefined && latestReading.moisture !== null && latestReading.moisture < 10) {
-          const alertId = createAlertId('low_moisture', latestReading.moisture);
-          console.log(`LOW MOISTURE ALERT: ${rodName} - ${latestReading.moisture}% (Alert ID: ${alertId})`);
+        // AI-based watering alerts
+        if (aiRecommendation.watering.urgency === 'critical') {
+          const alertId = createAlertId('ai_watering_critical');
           if (!processedAlerts.current.has(alertId)) {
             processedAlerts.current.add(alertId);
-            console.log('Adding low moisture notification');
             addNotification({
               farmId: farm.id,
               farmName: farm.name,
-              type: 'low_moisture',
-              title: 'Low Moisture Alert',
-              message: `${rodName} has low moisture level (${latestReading.moisture.toFixed(1)}%). Immediate attention required.`,
-              severity: 'high',
-              rodId: rod.rodId,
-              rodName: rodName,
-              sensorValue: latestReading.moisture,
-              thresholdValue: 10,
-            });
-          } else {
-            console.log('Low moisture alert already processed');
-          }
-        } else {
-          console.log(`Moisture OK: ${latestReading.moisture}%`);
-        }
-
-        // Check for high temperature (above 35°C)
-        if (latestReading.temperature !== undefined && latestReading.temperature !== null && latestReading.temperature > 35) {
-          const alertId = createAlertId('high_temp', latestReading.temperature);
-          console.log(`HIGH TEMPERATURE ALERT: ${rodName} - ${latestReading.temperature}°C (Alert ID: ${alertId})`);
-          if (!processedAlerts.current.has(alertId)) {
-            processedAlerts.current.add(alertId);
-            console.log('Adding high temperature notification');
-            addNotification({
-              farmId: farm.id,
-              farmName: farm.name,
-              type: 'high_temperature',
-              title: 'High Temperature Alert',
-              message: `${rodName} temperature is too high (${latestReading.temperature.toFixed(1)}°C). Check cooling systems.`,
-              severity: 'high',
-              rodId: rod.rodId,
-              rodName: rodName,
-              sensorValue: latestReading.temperature,
-              thresholdValue: 35,
-            });
-          } else {
-            console.log('High temperature alert already processed');
-          }
-        } else {
-          console.log(`Temperature OK: ${latestReading.temperature}°C`);
-        }
-
-        // Check for very low temperature (below 15°C)
-        if (latestReading.temperature !== undefined && latestReading.temperature !== null && latestReading.temperature < 15) {
-          const alertId = createAlertId('low_temp', latestReading.temperature);
-          console.log(`LOW TEMPERATURE ALERT: ${rodName} - ${latestReading.temperature}°C (Alert ID: ${alertId})`);
-          if (!processedAlerts.current.has(alertId)) {
-            processedAlerts.current.add(alertId);
-            console.log('Adding low temperature notification');
-            addNotification({
-              farmId: farm.id,
-              farmName: farm.name,
-              type: 'high_temperature', // Using same type for temperature issues
-              title: 'Low Temperature Alert',
-              message: `${rodName} temperature is too low (${latestReading.temperature.toFixed(1)}°C). Check heating systems.`,
-              severity: 'medium',
-              rodId: rod.rodId,
-              rodName: rodName,
-              sensorValue: latestReading.temperature,
-              thresholdValue: 15,
-            });
-          } else {
-            console.log('Low temperature alert already processed');
-          }
-        }
-
-        // Check for pH out of range (not between 6.0-7.0)
-        if (latestReading.ph !== undefined && latestReading.ph !== null && (latestReading.ph < 6.0 || latestReading.ph > 7.0)) {
-          const alertId = createAlertId('ph_alert', latestReading.ph);
-          console.log(`PH ALERT: ${rodName} - ${latestReading.ph} (Alert ID: ${alertId})`);
-          if (!processedAlerts.current.has(alertId)) {
-            processedAlerts.current.add(alertId);
-            console.log('Adding pH notification');
-            addNotification({
-              farmId: farm.id,
-              farmName: farm.name,
-              type: 'ph_alert',
-              title: 'pH Level Alert',
-              message: `${rodName} pH is out of optimal range (${latestReading.ph.toFixed(1)}). Optimal range: 6.0-7.0.`,
-              severity: 'medium',
-              rodId: rod.rodId,
-              rodName: rodName,
-              sensorValue: latestReading.ph,
-              thresholdValue: latestReading.ph < 6.0 ? 6.0 : 7.0,
-            });
-          } else {
-            console.log('pH alert already processed');
-          }
-        } else {
-          console.log(`pH OK: ${latestReading.ph}`);
-        }
-
-        // Check for very high moisture (above 25%)
-        if (latestReading.moisture !== undefined && latestReading.moisture !== null && latestReading.moisture > 25) {
-          const alertId = createAlertId('high_moisture', latestReading.moisture);
-          console.log(`HIGH MOISTURE ALERT: ${rodName} - ${latestReading.moisture}% (Alert ID: ${alertId})`);
-          if (!processedAlerts.current.has(alertId)) {
-            processedAlerts.current.add(alertId);
-            console.log('Adding high moisture notification');
-            addNotification({
-              farmId: farm.id,
-              farmName: farm.name,
-              type: 'low_moisture', // Using same type for moisture issues
-              title: 'High Moisture Alert',
-              message: `${rodName} has high moisture level (${latestReading.moisture.toFixed(1)}%). Check drainage systems.`,
-              severity: 'medium',
-              rodId: rod.rodId,
-              rodName: rodName,
-              sensorValue: latestReading.moisture,
-              thresholdValue: 25,
-            });
-          } else {
-            console.log('High moisture alert already processed');
-          }
-        }
-
-        // Check for very old readings (older than 1 hour)
-        if (latestReading.timestamp) {
-          const readingTime = new Date(latestReading.timestamp);
-          const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
-          
-          if (readingTime < oneHourAgo) {
-            addNotification({
-              farmId: farm.id,
-              farmName: farm.name,
-              type: 'rod_offline',
-              title: 'Rod Offline',
-              message: `${rodName} hasn't sent data for over an hour. Last reading: ${readingTime.toLocaleTimeString()}.`,
+              type: 'ai_watering',
+              title: '🤖 AI Alert: Critical Watering Needed',
+              message: `${rodName}: ${aiRecommendation.watering.reason}. Water in ${aiRecommendation.watering.hoursUntilNext} hours.`,
               severity: 'critical',
               rodId: rod.rodId,
               rodName: rodName,
             });
+          }
+        } else if (aiRecommendation.watering.urgency === 'high') {
+          const alertId = createAlertId('ai_watering_high');
+          if (!processedAlerts.current.has(alertId)) {
+            processedAlerts.current.add(alertId);
+            addNotification({
+              farmId: farm.id,
+              farmName: farm.name,
+              type: 'ai_watering',
+              title: '🤖 AI Alert: Watering Soon',
+              message: `${rodName}: ${aiRecommendation.watering.reason}. Water in ${aiRecommendation.watering.hoursUntilNext} hours.`,
+              severity: 'high',
+              rodId: rod.rodId,
+              rodName: rodName,
+            });
+          }
+        }
+
+        // AI-based fertilization alerts
+        if (aiRecommendation.fertilization.urgency === 'critical') {
+          const alertId = createAlertId('ai_fertilizer_critical');
+          if (!processedAlerts.current.has(alertId)) {
+            processedAlerts.current.add(alertId);
+            addNotification({
+              farmId: farm.id,
+              farmName: farm.name,
+              type: 'ai_fertilization',
+              title: '🤖 AI Alert: Critical Fertilization Needed',
+              message: `${rodName}: ${aiRecommendation.fertilization.reason}. Fertilize in ${aiRecommendation.fertilization.daysUntilNext} days. NPK: ${Math.round(aiRecommendation.fertilization.npkRatio.n)}-${Math.round(aiRecommendation.fertilization.npkRatio.p)}-${Math.round(aiRecommendation.fertilization.npkRatio.k)}`,
+              severity: 'critical',
+              rodId: rod.rodId,
+              rodName: rodName,
+            });
+          }
+        } else if (aiRecommendation.fertilization.urgency === 'high') {
+          const alertId = createAlertId('ai_fertilizer_high');
+          if (!processedAlerts.current.has(alertId)) {
+            processedAlerts.current.add(alertId);
+            addNotification({
+              farmId: farm.id,
+              farmName: farm.name,
+              type: 'ai_fertilization',
+              title: '🤖 AI Alert: Fertilization Soon',
+              message: `${rodName}: ${aiRecommendation.fertilization.reason}. Fertilize in ${aiRecommendation.fertilization.daysUntilNext} days.`,
+              severity: 'high',
+              rodId: rod.rodId,
+              rodName: rodName,
+            });
+          }
+        }
+
+        // Low plant health alert
+        if (aiRecommendation.healthScore < 40) {
+          const alertId = createAlertId('ai_health_low', aiRecommendation.healthScore);
+          if (!processedAlerts.current.has(alertId)) {
+            processedAlerts.current.add(alertId);
+            addNotification({
+              farmId: farm.id,
+              farmName: farm.name,
+              type: 'ai_health',
+              title: '🤖 AI Alert: Poor Plant Health',
+              message: `${rodName} health score is low (${aiRecommendation.healthScore}%). Check environmental conditions.`,
+              severity: 'high',
+              rodId: rod.rodId,
+              rodName: rodName,
+              sensorValue: aiRecommendation.healthScore,
+              thresholdValue: 40,
+            });
+          }
+        } else if (aiRecommendation.healthScore < 60) {
+          const alertId = createAlertId('ai_health_medium', aiRecommendation.healthScore);
+          if (!processedAlerts.current.has(alertId)) {
+            processedAlerts.current.add(alertId);
+            addNotification({
+              farmId: farm.id,
+              farmName: farm.name,
+              type: 'ai_health',
+              title: '🤖 AI Alert: Moderate Plant Health',
+              message: `${rodName} health score is moderate (${aiRecommendation.healthScore}%). Monitor conditions closely.`,
+              severity: 'medium',
+              rodId: rod.rodId,
+              rodName: rodName,
+              sensorValue: aiRecommendation.healthScore,
+              thresholdValue: 60,
+            });
+          }
+        }
+
+        // Low confidence alert (data quality issues)
+        if (aiRecommendation.confidence < 0.5) {
+          const alertId = createAlertId('ai_confidence_low', aiRecommendation.confidence);
+          if (!processedAlerts.current.has(alertId)) {
+            processedAlerts.current.add(alertId);
+            addNotification({
+              farmId: farm.id,
+              farmName: farm.name,
+              type: 'data_quality',
+              title: '🤖 AI Alert: Low Data Quality',
+              message: `${rodName} AI confidence is low (${Math.round(aiRecommendation.confidence * 100)}%). Check sensor functionality.`,
+              severity: 'medium',
+              rodId: rod.rodId,
+              rodName: rodName,
+            });
+          }
+        }
+
+        // Keep legacy alerts for immediate threshold violations
+        const latestReading = rod.readings[0];
+        
+        // Legacy critical alerts for immediate action
+        if (latestReading.moisture !== undefined && latestReading.moisture !== null && latestReading.moisture < 5) {
+          const alertId = createAlertId('legacy_critical_moisture', latestReading.moisture);
+          if (!processedAlerts.current.has(alertId)) {
+            processedAlerts.current.add(alertId);
+            addNotification({
+              farmId: farm.id,
+              farmName: farm.name,
+              type: 'low_moisture',
+              title: 'Critical: Extremely Low Moisture',
+              message: `${rodName} moisture critically low (${latestReading.moisture.toFixed(1)}%). IMMEDIATE ACTION REQUIRED.`,
+              severity: 'critical',
+              rodId: rod.rodId,
+              rodName: rodName,
+              sensorValue: latestReading.moisture,
+              thresholdValue: 5,
+            });
+          }
+        }
+
+        if (latestReading.temperature !== undefined && latestReading.temperature !== null && latestReading.temperature > 40) {
+          const alertId = createAlertId('legacy_critical_temp', latestReading.temperature);
+          if (!processedAlerts.current.has(alertId)) {
+            processedAlerts.current.add(alertId);
+            addNotification({
+              farmId: farm.id,
+              farmName: farm.name,
+              type: 'high_temperature',
+              title: 'Critical: Dangerous Temperature',
+              message: `${rodName} temperature dangerously high (${latestReading.temperature.toFixed(1)}°C). IMMEDIATE ACTION REQUIRED.`,
+              severity: 'critical',
+              rodId: rod.rodId,
+              rodName: rodName,
+              sensorValue: latestReading.temperature,
+              thresholdValue: 40,
+            });
+          }
+        }
+
+        // Check for very old readings (older than 2 hours)
+        if (latestReading.timestamp) {
+          const readingTime = new Date(latestReading.timestamp);
+          const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
+          
+          if (readingTime < twoHoursAgo) {
+            const alertId = createAlertId('rod_offline');
+            if (!processedAlerts.current.has(alertId)) {
+              processedAlerts.current.add(alertId);
+              addNotification({
+                farmId: farm.id,
+                farmName: farm.name,
+                type: 'rod_offline',
+                title: 'Rod Offline',
+                message: `${rodName} hasn't sent data for over 2 hours. Last reading: ${readingTime.toLocaleTimeString()}.`,
+                severity: 'critical',
+                rodId: rod.rodId,
+                rodName: rodName,
+              });
+            }
           }
         }
       });

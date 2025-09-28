@@ -87,7 +87,7 @@ export default async function Home() {
         {/* Animated Footer */}
         <div className="text-center mt-8 opacity-0 translate-y-8 animate-[fadeInUp_0.8s_ease-out_0.4s_forwards]">
           <p className="text-xs text-gray-400">
-            © 2025 EAEMS. Built for the future.
+            © 2025 AEAMS. Built for the future.
           </p>
         </div>
         

@@ -1,6 +1,6 @@
 "use client";
 
-import { signOut } from '@/auth';
+import { signOut } from 'next-auth/react';
 import NotificationCenter from './NotificationCenter';
 
 interface DashboardNavbarProps {
@@ -9,7 +9,7 @@ interface DashboardNavbarProps {
 
 export default function DashboardNavbar({ userName }: DashboardNavbarProps) {
   const handleSignOut = async () => {
-    await signOut({ redirectTo: "/" });
+    await signOut({ callbackUrl: "/" });
   };
 
   return (

@@ -12,8 +12,12 @@ interface PrismaError extends Error {
 // Clean and validate environment variables
 const NEXTAUTH_SECRET = process.env.NEXTAUTH_SECRET?.trim()
 
-if (!NEXTAUTH_SECRET || NEXTAUTH_SECRET.length < 32) {
-  console.error("🚨 NEXTAUTH_SECRET is missing or too short (need 32+ characters)")
+if (!NEXTAUTH_SECRET) {
+  console.log("DATABASE", process.env)
+  console.error("🚨 NEXTAUTH_SECRET is missing")
+}
+else if (NEXTAUTH_SECRET.length < 32) {
+  console.error("🚨 NEXTAUTH_SECRET is too short (need 32+ characters)")
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
@@ -27,7 +31,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         email: {
           label: "Email",
           type: "email",
-          placeholder: "Enter your email" 
+          placeholder: "Enter your email"
         },
         password: {
           label: "Password",
@@ -62,7 +66,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           }
 
           console.log("🔍 User found, verifying password...")
-          
+
           // Verify password
           const isValidPassword = await bcryptjs.compare(
             credentials.password as string,
@@ -75,7 +79,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           }
 
           console.log("✅ Authentication successful for:", user.email)
-          
+
           // Return user object - this becomes the JWT token payload
           return {
             id: user.id.toString(),
@@ -89,11 +93,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             code: e.code,
             meta: e.meta
           })
-          
+
           if (e.code === 'P1001') {
             console.error("🔌 Database connection failed - check your DATABASE_URL")
           }
-          
+
           return null
         }
       }

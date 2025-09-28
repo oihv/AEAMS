@@ -82,7 +82,7 @@ export default function FarmCard({ farm, isEditMode = false }: FarmCardProps) {
           </div>
           
           <div className="flex justify-between text-sm">
-            <span className="text-gray-600">Secondary Rods:</span>
+            <span className="text-gray-600">All Rods:</span>
             <span className="font-semibold text-gray-800">{secondaryRodCount}</span>
           </div>
 

@@ -77,11 +77,18 @@ export async function POST(request: NextRequest) {
     }
 
     // Get request data
-    const { name, location, description } = await request.json()
+    const { name, location, description, plantType } = await request.json()
 
     if (!name) {
       return NextResponse.json(
         { error: "Farm name is required" },
+        { status: 400 }
+      )
+    }
+
+    if (!plantType) {
+      return NextResponse.json(
+        { error: "Plant type is required" },
         { status: 400 }
       )
     }
@@ -92,6 +99,7 @@ export async function POST(request: NextRequest) {
         name,
         location,
         description,
+        plantType,
         userId: user.id,
       }
     })

@@ -14,6 +14,7 @@ interface FarmDetailsProps {
     name: string
     location?: string | null
     description?: string | null
+    plantType?: string
     mainRod?: {
       id: string
       rodId: string
@@ -99,6 +100,9 @@ export default function FarmDetails({ initialFarm }: FarmDetailsProps) {
             ← Back to Dashboard
           </Link>
           <h1 className="text-3xl font-bold text-gray-900">{farm.name}</h1>
+          {farm.plantType && (
+            <p className="text-green-700 mt-1 font-medium">🌱 {farm.plantType}</p>
+          )}
           {farm.location && (
             <p className="text-gray-600 mt-1">📍 {farm.location}</p>
           )}
@@ -155,7 +159,7 @@ export default function FarmDetails({ initialFarm }: FarmDetailsProps) {
               <div className="text-2xl font-bold text-gray-900">
                 {farm.mainRod?.secondaryRods?.length || 0}
               </div>
-              <div className="text-sm text-gray-600">Secondary Rods</div>
+              <div className="text-sm text-gray-600">All Rods</div>
             </div>
           </div>
         ) : (
@@ -167,17 +171,17 @@ export default function FarmDetails({ initialFarm }: FarmDetailsProps) {
         )}
       </div>
 
-      {hasMainRod && (
-        <div className="space-y-8 mb-8">
-          <MLDashboard farmId={farm.id} />
-          <AIRecommendations farmId={farm.id} />
-        </div>
-      )}
+      {/* {hasMainRod && ( */}
+      {/*   <div className="space-y-8 mb-8"> */}
+      {/*     <MLDashboard farmId={farm.id} /> */}
+      {/*     <AIRecommendations farmId={farm.id} /> */}
+      {/*   </div> */}
+      {/* )} */}
 
       {hasMainRod && (
         <div className="bg-white rounded-xl border border-gray-200 p-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-semibold text-gray-900">Secondary Rods</h2>
+            <h2 className="text-xl font-semibold text-gray-900">All Rods</h2>
             <div className="text-sm text-gray-500">
               Auto-refreshing every 30 seconds
             </div>

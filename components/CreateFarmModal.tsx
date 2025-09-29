@@ -11,8 +11,26 @@ export default function CreateFarmModal({ onClose, onFarmCreated }: CreateFarmMo
   const [name, setName] = useState("")
   const [location, setLocation] = useState("")
   const [description, setDescription] = useState("")
+  const [plantType, setPlantType] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
+
+  // Common plant types for agriculture
+  const plantTypes = [
+    "Tomatoes",
+    "Lettuce",
+    "Carrots",
+    "Peppers",
+    "Cucumbers",
+    "Spinach",
+    "Potatoes",
+    "Onions",
+    "Beans",
+    "Corn",
+    "Strawberries",
+    "Herbs",
+    "Other"
+  ]
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -29,6 +47,7 @@ export default function CreateFarmModal({ onClose, onFarmCreated }: CreateFarmMo
           name,
           location: location || null,
           description: description || null,
+          plantType,
         }),
       })
 
@@ -76,6 +95,26 @@ export default function CreateFarmModal({ onClose, onFarmCreated }: CreateFarmMo
           </div>
 
           <div>
+            <label htmlFor="plantType" className="block text-sm font-medium text-gray-900 mb-1">
+              Plant Type *
+            </label>
+            <select
+              id="plantType"
+              value={plantType}
+              onChange={(e) => setPlantType(e.target.value)}
+              required
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900"
+            >
+              <option value="">Select plant type</option>
+              {plantTypes.map((type) => (
+                <option key={type} value={type}>
+                  {type}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
             <label htmlFor="location" className="block text-sm font-medium text-gray-900 mb-1">
               Location
             </label>
@@ -117,7 +156,7 @@ export default function CreateFarmModal({ onClose, onFarmCreated }: CreateFarmMo
             </button>
             <button
               type="submit"
-              disabled={isLoading || !name.trim()}
+              disabled={isLoading || !name.trim() || !plantType}
               className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {isLoading ? "Creating..." : "Create Farm"}

@@ -47,7 +47,7 @@ class PlantCareAI {
     if (readings.length === 0) return 0
 
     const latest = readings[0] // Most recent reading
-    let score = 100
+    const score = 100
     let penalties = 0
 
     // Temperature penalty

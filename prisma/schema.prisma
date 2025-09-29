@@ -61,6 +61,7 @@ model Farm {
   name        String
   location    String?
   description String?
+  plantType   String    @default("Unknown") @map("plant_type") // Required field for plant type
   userId      String    @map("user_id")
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   mainRod     MainRod?
@@ -95,37 +96,57 @@ model MainRod {
 }
 
 model SecondaryRod {
-  id        String    @id @default(cuid())
-  rodId     String    @unique @map("rod_id") // Production ID
-  name      String?
-  location  String?
-  mainRodId String    @map("main_rod_id")
-  mainRod   MainRod   @relation(fields: [mainRodId], references: [id], onDelete: Cascade)
-  isActive  Boolean   @default(true) @map("is_active")
-  lastSeen  DateTime? @map("last_seen")
-  positionX Float?    @map("position_x") // X coordinate for map view
-  positionY Float?    @map("position_y") // Y coordinate for map view
-  readings  Reading[]
-  createdAt DateTime  @default(now()) @map("created_at")
-  updatedAt DateTime  @updatedAt @map("updated_at")
+  id            String         @id @default(cuid())
+  rodId         String         @unique @map("rod_id") // Production ID
+  name          String?
+  location      String?
+  mainRodId     String         @map("main_rod_id")
+  mainRod       MainRod        @relation(fields: [mainRodId], references: [id], onDelete: Cascade)
+  isActive      Boolean        @default(true) @map("is_active")
+  lastSeen      DateTime?      @map("last_seen")
+  positionX     Float?         @map("position_x") // X coordinate for map view
+  positionY     Float?         @map("position_y") // Y coordinate for map view
+  readings      Reading[]
+  aiSuggestions AISuggestion[] // One-to-many relation
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
 
   @@map("secondary_rods")
 }
 
 model Reading {
-  id             String       @id @default(cuid())
-  secondaryRodId String       @map("secondary_rod_id")
-  secondaryRod   SecondaryRod @relation(fields: [secondaryRodId], references: [id], onDelete: Cascade)
+  id             String        @id @default(cuid())
+  secondaryRodId String        @map("secondary_rod_id")
+  secondaryRod   SecondaryRod  @relation(fields: [secondaryRodId], references: [id], onDelete: Cascade)
   temperature    Float?
   moisture       Float?
   ph             Float?
   conductivity   Float?
-  nitrogen       Float?       @map("n")
-  phosphorus     Float?       @map("p")
-  potassium      Float?       @map("k")
-  timestamp      DateTime     @default(now())
+  nitrogen       Float?        @map("n")
+  phosphorus     Float?        @map("p")
+  potassium      Float?        @map("k")
+  timestamp      DateTime      @default(now())
+  aiSuggestion   AISuggestion? // One-to-one relation
 
   @@map("readings")
+}
+
+model AISuggestion {
+  id             String       @id @default(cuid())
+  readingId      String       @unique @map("reading_id")
+  reading        Reading      @relation(fields: [readingId], references: [id], onDelete: Cascade)
+  secondaryRodId String       @map("secondary_rod_id")
+  secondaryRod   SecondaryRod @relation(fields: [secondaryRodId], references: [id], onDelete: Cascade)
+  plantType      String       @map("plant_type")
+  model          String       // 'deepseek' | 'rule_based'
+  suggestion     Json         // Full AISuggestion payload
+  generatedAt    DateTime     @default(now()) @map("generated_at")
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+
+  @@index([secondaryRodId])
+  @@index([createdAt])
+  @@map("ai_suggestions")
 }
 
 model VerificationToken {

@@ -1,3 +1,8 @@
+"use client"
+
+import { useState, useEffect } from "react"
+import type { AISuggestion } from "@/lib/ai-suggestions"
+
 export type RodCardProps = {
   id: string;
   rodId?: string; // Database ID for position persistence
@@ -13,7 +18,34 @@ export type RodCardProps = {
   isEditMode?: boolean;
 };
 
-export default function RodCard({ id, temperature, moisture, ph, conductivity, n, p, k, timestamp, hasValidData = true, isEditMode = false }: RodCardProps) {
+export default function RodCard({ id, rodId, temperature, moisture, ph, conductivity, n, p, k, timestamp, hasValidData = true, isEditMode = false }: RodCardProps) {
+  const [suggestions, setSuggestions] = useState<AISuggestion | null>(null)
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false)
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  // Fetch AI suggestions when rod has valid data
+  useEffect(() => {
+    if (hasValidData && rodId && !loadingSuggestions && !suggestions) {
+      fetchAISuggestions()
+    }
+  }, [hasValidData, rodId])
+
+  const fetchAISuggestions = async () => {
+    if (!rodId) return
+    
+    setLoadingSuggestions(true)
+    try {
+      const response = await fetch(`/api/ai-suggestions/${rodId}`)
+      if (response.ok) {
+        const data = await response.json()
+        setSuggestions(data.suggestions)
+      }
+    } catch (error) {
+      console.error('Failed to fetch AI suggestions:', error)
+    } finally {
+      setLoadingSuggestions(false)
+    }
+  }
+
   const getStatusColor = (value: number, type: string) => {
     if (!hasValidData) return 'text-red-600'
     
@@ -110,6 +142,92 @@ export default function RodCard({ id, temperature, moisture, ph, conductivity, n
             <div className="text-xs text-red-600 font-medium">
               ⚠️ Missing from latest update
             </div>
+          </div>
+        )}
+
+        {/* AI Suggestions Section */}
+        {hasValidData && rodId && (
+          <div className="pt-3 mt-3 border-t border-blue-100">
+            <button
+              onClick={() => setShowSuggestions(!showSuggestions)}
+              className="flex items-center justify-between w-full text-left"
+            >
+              <div className="text-xs font-medium text-blue-700">
+                🤖 AI Suggestions
+              </div>
+              <div className="text-blue-600">
+                {showSuggestions ? '▼' : '▶'}
+              </div>
+            </button>
+            
+            {showSuggestions && (
+              <div className="mt-2 space-y-2">
+                {loadingSuggestions ? (
+                  <div className="text-xs text-gray-500 italic">Loading suggestions...</div>
+                ) : suggestions ? (
+                  <>
+                    {/* Watering Suggestion */}
+                    <div className="bg-blue-50 rounded p-2">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-xs font-medium text-blue-800">💧 Watering</span>
+                        <span className={`text-xs px-1 rounded ${ 
+                          suggestions.watering.urgency === 'high' ? 'bg-red-100 text-red-700' :
+                          suggestions.watering.urgency === 'medium' ? 'bg-yellow-100 text-yellow-700' :
+                          'bg-green-100 text-green-700'
+                        }`}>
+                          {suggestions.watering.recommendation}
+                        </span>
+                      </div>
+                      <div className="text-xs text-gray-600">{suggestions.watering.reason}</div>
+                      {suggestions.watering.hoursUntilNext > 0 && (
+                        <div className="text-xs text-blue-600 mt-1">
+                          Next: {suggestions.watering.hoursUntilNext}h
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Fertilizing Suggestion */}
+                    <div className="bg-green-50 rounded p-2">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-xs font-medium text-green-800">🌱 Fertilizing</span>
+                        <span className="text-xs px-1 rounded bg-green-100 text-green-700">
+                          {suggestions.fertilizing.type}
+                        </span>
+                      </div>
+                      <div className="text-xs text-gray-600">{suggestions.fertilizing.reason}</div>
+                      {suggestions.fertilizing.daysUntilNext > 0 && (
+                        <div className="text-xs text-green-600 mt-1">
+                          Next: {suggestions.fertilizing.daysUntilNext}d
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Plant Health Score */}
+                    <div className="bg-gray-50 rounded p-2">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-xs font-medium text-gray-800">🌿 Plant Health</span>
+                        <span className={`text-xs px-1 rounded ${
+                          suggestions.plantHealth.score >= 80 ? 'bg-green-100 text-green-700' :
+                          suggestions.plantHealth.score >= 60 ? 'bg-yellow-100 text-yellow-700' :
+                          'bg-red-100 text-red-700'
+                        }`}>
+                          {suggestions.plantHealth.score}%
+                        </span>
+                      </div>
+                      {suggestions.plantHealth.concerns.length > 0 && (
+                        <div className="text-xs text-gray-600">
+                          ⚠️ {suggestions.plantHealth.concerns.join(', ')}
+                        </div>
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  <div className="text-xs text-gray-500">
+                    Click to load AI suggestions
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
       </div>

@@ -1,0 +1,62 @@
+
+> aeams@1.0.0 dev
+> next dev --turbopack
+
+   ▲ Next.js 15.4.6 (Turbopack)
+   - Local:        http://localhost:3000
+   - Network:      http://10.194.238.38:3000
+   - Environments: .env.local, .env
+
+ ✓ Starting...
+ ✓ Compiled middleware in 260ms
+ ✓ Ready in 2.2s
+�️ Middleware: /api/health
+❌ No auth token found
+ ○ Compiling /api/health ...
+ ✓ Compiled /api/health in 2.1s
+ GET /api/health 200 in 2381ms
+ ✓ Compiled /api/auth-status in 173ms
+🔐 NextAuth Secret Status: {
+  hasNextAuthSecret: true,
+  nextAuthSecretLength: 44,
+  isProduction: false,
+  nextAuthUrl: 'http://localhost:3000',
+  secretPreview: 'uvPrYo9C...uvPrYo9C4dUSZitxWtt6DYaQ5TZrV8+boNkMTG1z9OQ='
+}
+ GET /api/auth-status 200 in 245ms
+�️ Middleware: /
+❌ No auth token found
+ ○ Compiling / ...
+ ✓ Compiled / in 6.2s
+[dotenv@17.2.1] injecting env (0) from .env -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+⚠️ NextAuth Warning: debug-enabled
+ GET / 200 in 6722ms
+�️ Middleware: /api/ml/train
+❌ No auth token found
+ ○ Compiling /api/ml/train ...
+ ✓ Compiled /api/ml/train in 2.7s
+[dotenv@17.2.1] injecting env (0) from .env -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+⚠️ NextAuth Warning: debug-enabled
+ GET /api/ml/train 401 in 3247ms
+�️ Middleware: /api/farms
+❌ No auth token found
+ ✓ Compiled /api/farms in 267ms
+ GET /api/farms 401 in 354ms
+�️ Middleware: /api/health
+❌ No auth token found
+ GET /api/health 200 in 50ms
+�️ Middleware: /dashboard/farm/cmepvb1uu0002fysz9pia81il
+ ○ Compiling /dashboard/farm/[farmId] ...
+ ✓ Compiled /dashboard/farm/[farmId] in 1428ms
+[dotenv@17.2.1] injecting env (0) from .env -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+🎫 JWT token updated: { id: 'cmepvajl60000fyszl7doamj6', email: 'test@gmail.com' }
+🔐 Session updated: { user: { id: 'cmepvajl60000fyszl7doamj6', email: 'test@gmail.com' } }
+🎫 JWT token updated: { id: 'cmepvajl60000fyszl7doamj6', email: 'test@gmail.com' }
+🔐 Session updated: { user: { id: 'cmepvajl60000fyszl7doamj6', email: 'test@gmail.com' } }
+[dotenv@17.2.1] injecting env (0) from .env -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+ GET /dashboard/farm/cmepvb1uu0002fysz9pia81il 200 in 2313ms
+[dotenv@17.2.1] injecting env (0) from .env -- tip: 📡 observe env with Radar: https://dotenvx.com/radar
+�️ Middleware: /dashboard/farm/cmepvb1uu0002fysz9pia81il
+�️ Middleware: /
+❌ No auth token found
+ GET / 200 in 395ms

@@ -7,11 +7,17 @@ export async function GET() {
     isProduction: process.env.NODE_ENV === 'production',
     nextAuthUrl: process.env.NEXTAUTH_URL,
     secretPreview: process.env.NEXTAUTH_SECRET 
-      ? `${process.env.NEXTAUTH_SECRET.substring(0, 8)}...${process.env.NEXTAUTH_SECRET.substring(-8)}`
+      ? '***SECRET_SET***'
       : 'NOT_SET'
   }
 
-  console.log("🔐 NextAuth Secret Status:", envStatus)
+  // Only log in development and mask sensitive data
+  if (process.env.NODE_ENV === 'development') {
+    console.log("🔐 NextAuth Secret Status:", {
+      ...envStatus,
+      secretPreview: envStatus.secretPreview
+    })
+  }
 
   // Test JWT token generation capability
   let jwtTest = 'UNKNOWN'

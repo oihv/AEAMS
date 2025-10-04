@@ -76,11 +76,11 @@ export default function FarmDetails({ initialFarm }: FarmDetailsProps) {
     }
   }
 
-  // Auto-refresh every 30 seconds when main rod is connected
+  // Auto-refresh every 1 minute when main rod is connected
   useEffect(() => {
     if (!hasMainRod) return
 
-    const interval = setInterval(refreshFarmData, 30000) // 30 seconds
+    const interval = setInterval(refreshFarmData, 60000) // 60 seconds
     return () => clearInterval(interval)
   }, [hasMainRod, farm.id])
 

@@ -39,15 +39,43 @@ export default function FarmCard({ farm, isEditMode = false }: FarmCardProps) {
   const getLatestReadings = () => {
     if (!farm.mainRod?.secondaryRods) return null
     
-    const allReadings = farm.mainRod.secondaryRods
-      .flatMap(rod => rod.readings)
-      .filter(reading => reading)
+    // Get the latest reading from each rod and find the most recent ones
+    const latestReadings = farm.mainRod.secondaryRods
+      .map(rod => rod.readings?.[0]) // Get latest reading from each rod
+      .filter(reading => reading && (
+        reading.temperature !== null ||
+        reading.moisture !== null ||
+        reading.ph !== null ||
+        reading.conductivity !== null ||
+        reading.nitrogen !== null ||
+        reading.phosphorus !== null ||
+        reading.potassium !== null
+      ))
     
-    if (allReadings.length === 0) return null
+    if (latestReadings.length === 0) return null
     
-    const avgTemp = allReadings.reduce((sum, r) => sum + (r.temperature || 0), 0) / allReadings.length
-    const avgMoisture = allReadings.reduce((sum, r) => sum + (r.moisture || 0), 0) / allReadings.length
-    const avgPh = allReadings.reduce((sum, r) => sum + (r.ph || 0), 0) / allReadings.length
+    // Find the most recent timestamp to identify the latest data batch
+    const timestamps = latestReadings
+      .map(r => new Date(r.timestamp).getTime())
+      .filter(t => !isNaN(t))
+    
+    if (timestamps.length === 0) return null
+    
+    const newestTimestamp = Math.max(...timestamps)
+    const fiveMinutesMs = 5 * 60 * 1000
+    
+    // Only include readings from the most recent batch (within 5 minutes of newest)
+    const recentReadings = latestReadings.filter(reading => {
+      const readingTime = new Date(reading.timestamp).getTime()
+      return (newestTimestamp - readingTime) <= fiveMinutesMs
+    })
+    
+    if (recentReadings.length === 0) return null
+    
+    // Calculate averages from the most recent readings only
+    const avgTemp = recentReadings.reduce((sum, r) => sum + (r.temperature || 0), 0) / recentReadings.length
+    const avgMoisture = recentReadings.reduce((sum, r) => sum + (r.moisture || 0), 0) / recentReadings.length
+    const avgPh = recentReadings.reduce((sum, r) => sum + (r.ph || 0), 0) / recentReadings.length
     
     return { avgTemp, avgMoisture, avgPh }
   }
@@ -88,7 +116,7 @@ export default function FarmCard({ farm, isEditMode = false }: FarmCardProps) {
 
           {readings && (
             <div className="pt-3 border-t border-gray-100">
-              <div className="text-xs text-gray-700 font-medium mb-2">Latest Averages:</div>
+              <div className="text-xs text-gray-700 font-medium mb-2">Latest Readings:</div>
               <div className="grid grid-cols-3 gap-2 text-xs">
                 <div className="text-center">
                   <div className="font-bold text-black">{readings.avgTemp.toFixed(1)}°C</div>

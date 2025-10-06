@@ -22,19 +22,28 @@ export default function RodCard({ id, rodId, temperature, moisture, ph, conducti
   const [suggestions, setSuggestions] = useState<AISuggestion | null>(null)
   const [loadingSuggestions, setLoadingSuggestions] = useState(false)
   const [showSuggestions, setShowSuggestions] = useState(false)
-  // Fetch AI suggestions when rod has valid data
+  // Create a data signature to detect changes in sensor values
+  const dataSignature = `${temperature}-${moisture}-${ph}-${conductivity}-${n}-${p}-${k}-${timestamp ? new Date(timestamp).getTime() : 'null'}`
+  
+  // Fetch AI suggestions when rod has valid data or when data changes
   useEffect(() => {
-    if (hasValidData && rodId && !loadingSuggestions && !suggestions) {
+    if (hasValidData && rodId && !loadingSuggestions) {
+      // Clear existing suggestions when data changes to force refresh
+      if (suggestions) {
+        setSuggestions(null)
+      }
       fetchAISuggestions()
     }
-  }, [hasValidData, rodId])
+  }, [hasValidData, rodId, dataSignature])
 
   const fetchAISuggestions = async () => {
     if (!rodId) return
     
     setLoadingSuggestions(true)
     try {
-      const response = await fetch(`/api/ai-suggestions/${rodId}`)
+      // Add cache-busting parameter to force fresh suggestions
+      const timestamp = Date.now()
+      const response = await fetch(`/api/ai-suggestions/${rodId}?t=${timestamp}`)
       if (response.ok) {
         const data = await response.json()
         setSuggestions(data.suggestions)
@@ -162,6 +171,15 @@ export default function RodCard({ id, rodId, temperature, moisture, ph, conducti
             
             {showSuggestions && (
               <div className="mt-2 space-y-2">
+                <div className="flex items-center justify-between">
+                  <button
+                    onClick={fetchAISuggestions}
+                    disabled={loadingSuggestions}
+                    className="text-xs text-blue-600 hover:text-blue-800 disabled:opacity-50"
+                  >
+                    🔄 Refresh
+                  </button>
+                </div>
                 {loadingSuggestions ? (
                   <div className="text-xs text-gray-500 italic">Loading suggestions...</div>
                 ) : suggestions ? (
@@ -181,7 +199,7 @@ export default function RodCard({ id, rodId, temperature, moisture, ph, conducti
                       <div className="text-xs text-gray-600">{suggestions.watering.reason}</div>
                       {suggestions.watering.hoursUntilNext > 0 && (
                         <div className="text-xs text-blue-600 mt-1">
-                          Next: {suggestions.watering.hoursUntilNext}h
+                          Water in: {suggestions.watering.hoursUntilNext}h
                         </div>
                       )}
                     </div>
@@ -197,7 +215,7 @@ export default function RodCard({ id, rodId, temperature, moisture, ph, conducti
                       <div className="text-xs text-gray-600">{suggestions.fertilizing.reason}</div>
                       {suggestions.fertilizing.daysUntilNext > 0 && (
                         <div className="text-xs text-green-600 mt-1">
-                          Next: {suggestions.fertilizing.daysUntilNext}d
+                          Fertilize in: {suggestions.fertilizing.daysUntilNext}d
                         </div>
                       )}
                     </div>

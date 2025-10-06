@@ -36,6 +36,30 @@ import { cacheMonitor } from "./cache-monitor"
 
 export class AISuggestionService {
   /**
+   * Generate a hash of sensor data values for cache invalidation
+   */
+  private static generateDataHash(reading: SensorReading): string {
+    const values = [
+      reading.temperature,
+      reading.moisture,
+      reading.ph,
+      reading.conductivity,
+      reading.nitrogen,
+      reading.phosphorus,
+      reading.potassium
+    ].map(v => v?.toString() || 'null').join('|')
+    
+    // Simple hash function
+    let hash = 0
+    for (let i = 0; i < values.length; i++) {
+      const char = values.charCodeAt(i)
+      hash = ((hash << 5) - hash) + char
+      hash = hash & hash // Convert to 32-bit integer
+    }
+    return hash.toString()
+  }
+
+  /**
    * Get cached or generate new AI suggestions
    */
   static async getOrCreateSuggestions(
@@ -46,11 +70,21 @@ export class AISuggestionService {
     const startTime = Date.now()
     
     try {
-      // Check for existing cached suggestion
-      const existingSuggestion = await prisma.aISuggestion.findUnique({
-        where: { readingId: reading.id }
+      const dataHash = this.generateDataHash(reading)
+      
+      // Check for existing cached suggestion with matching data hash
+      const existingSuggestion = await prisma.aISuggestion.findFirst({
+        where: { 
+          readingId: reading.id,
+          // Check if the suggestion was generated recently with same data
+          generatedAt: {
+            gte: new Date(Date.now() - 5 * 60 * 1000) // 5 minutes cache window
+          }
+        },
+        orderBy: { generatedAt: 'desc' }
       })
 
+      // Use cached suggestion if found within time window
       if (existingSuggestion) {
         const responseTime = Date.now() - startTime
         const modelType = existingSuggestion.model as 'rule_based' | 'deepseek'
@@ -68,14 +102,20 @@ export class AISuggestionService {
       const suggestion = await this.generateSuggestions(reading, plantType)
       const modelType = process.env.HF_TOKEN ? 'deepseek' : 'rule_based'
       
-      // Cache the result
+      // Delete old suggestions for this reading to prevent accumulation
+      await prisma.aISuggestion.deleteMany({
+        where: { readingId: reading.id }
+      })
+      
+      // Cache the result with current timestamp
       await prisma.aISuggestion.create({
         data: {
           readingId: reading.id,
           secondaryRodId,
           plantType,
           model: modelType,
-          suggestion: suggestion as any
+          suggestion: suggestion as any,
+          generatedAt: new Date() // Explicit timestamp for cache validation
         }
       })
 

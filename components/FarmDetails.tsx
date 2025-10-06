@@ -183,7 +183,7 @@ export default function FarmDetails({ initialFarm }: FarmDetailsProps) {
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-semibold text-gray-900">All Rods</h2>
             <div className="text-sm text-gray-500">
-              Auto-refreshing every 30 seconds
+              Auto-refreshing every minute
             </div>
           </div>
 

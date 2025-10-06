@@ -225,7 +225,7 @@ Please respond with EXACTLY this JSON format (no additional text):
 {
   "watering": {
     "recommendation": "now|soon|later|not_needed",
-    "hoursUntilNext": number,
+     "hoursUntilNext": number (0 for "now", 1-4 for "soon", 6-24 for "later", 24-72 for "not_needed"),
     "reason": "brief explanation",
     "urgency": "low|medium|high"
   },
@@ -255,11 +255,27 @@ Please respond with EXACTLY this JSON format (no additional text):
       
       const parsed = JSON.parse(jsonStr)
       
-      // Validate the structure and provide defaults
+      // Validate the structure and ensure consistency
+      const wateringRec = parsed.watering?.recommendation || 'later'
+      const providedHours = parsed.watering?.hoursUntilNext
+      
+      // Validate and correct inconsistent timing
+      let hoursUntilNext = 24 // default
+      
+      if (wateringRec === 'now') {
+        hoursUntilNext = 0
+      } else if (wateringRec === 'soon') {
+        hoursUntilNext = providedHours && providedHours <= 4 ? providedHours : 2
+      } else if (wateringRec === 'later') {
+        hoursUntilNext = providedHours && providedHours >= 6 && providedHours <= 24 ? providedHours : 12
+      } else if (wateringRec === 'not_needed') {
+        hoursUntilNext = providedHours && providedHours >= 24 ? providedHours : 48
+      }
+      
       return {
         watering: {
-          recommendation: parsed.watering?.recommendation || 'later',
-          hoursUntilNext: Math.max(0, parsed.watering?.hoursUntilNext || 24),
+          recommendation: wateringRec,
+          hoursUntilNext: Math.max(0, hoursUntilNext),
           reason: parsed.watering?.reason || 'Based on current conditions',
           urgency: parsed.watering?.urgency || 'medium'
         },
@@ -310,11 +326,18 @@ Please respond with EXACTLY this JSON format (no additional text):
           reason: 'Soil moisture getting low',
           urgency: 'medium'
         }
-      } else if (reading.moisture > 80) {
+      } else if (reading.moisture >= 40 && reading.moisture <= 70) {
+        wateringRec = {
+          recommendation: 'later',
+          hoursUntilNext: 12,
+          reason: 'Soil moisture is adequate',
+          urgency: 'low'
+        }
+      } else if (reading.moisture > 70) {
         wateringRec = {
           recommendation: 'not_needed',
           hoursUntilNext: 48,
-          reason: 'Soil is adequately moist',
+          reason: 'Soil is well hydrated',
           urgency: 'low'
         }
       }

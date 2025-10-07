@@ -229,12 +229,12 @@ Please respond with EXACTLY this JSON format (no additional text):
     "reason": "brief explanation",
     "urgency": "low|medium|high"
   },
-  "fertilizing": {
-    "recommendation": "now|soon|later|not_needed", 
-    "daysUntilNext": number,
-    "reason": "brief explanation",
-    "type": "nitrogen|phosphorus|potassium|balanced|none"
-  },
+   "fertilizing": {
+     "recommendation": "now|soon|later|not_needed", 
+     "daysUntilNext": number (0 for "now", 1-3 for "soon", 3-14 for "later", 14+ for "not_needed"),
+     "reason": "brief explanation (critical deficiency <5ppm P, <10ppm N, <30ppm K requires immediate action)",
+     "type": "nitrogen|phosphorus|potassium|balanced|none"
+   },
   "plantHealth": {
     "score": number_0_to_100,
     "status": "excellent|good|fair|poor|critical",
@@ -242,6 +242,22 @@ Please respond with EXACTLY this JSON format (no additional text):
   }
 }
     `.trim()
+  }
+
+  /**
+   * Validate fertilizing timing based on recommendation
+   */
+  private static validateFertilizingDays(recommendation: string, providedDays?: number): number {
+    if (recommendation === 'now') {
+      return 0
+    } else if (recommendation === 'soon') {
+      return providedDays && providedDays <= 3 ? providedDays : 2
+    } else if (recommendation === 'later') {
+      return providedDays && providedDays >= 3 && providedDays <= 14 ? providedDays : 7
+    } else if (recommendation === 'not_needed') {
+      return providedDays && providedDays >= 14 ? providedDays : 30
+    }
+    return 7 // default
   }
 
   /**
@@ -281,7 +297,10 @@ Please respond with EXACTLY this JSON format (no additional text):
         },
         fertilizing: {
           recommendation: parsed.fertilizing?.recommendation || 'later',
-          daysUntilNext: Math.max(0, parsed.fertilizing?.daysUntilNext || 7),
+          daysUntilNext: Math.max(0, this.validateFertilizingDays(
+            parsed.fertilizing?.recommendation || 'later',
+            parsed.fertilizing?.daysUntilNext
+          )),
           reason: parsed.fertilizing?.reason || 'Nutrient levels stable',
           type: parsed.fertilizing?.type || 'balanced',
           urgency: parsed.fertilizing?.urgency || 'low'
@@ -352,12 +371,42 @@ Please respond with EXACTLY this JSON format (no additional text):
       urgency: 'low'
     }
 
-    // Check NPK levels - adjusted thresholds for more realistic ranges
+    // Check NPK levels with severity-based thresholds
+    const critically_lowN = reading.nitrogen !== null && reading.nitrogen !== undefined && reading.nitrogen < 10
     const lowN = reading.nitrogen !== null && reading.nitrogen !== undefined && reading.nitrogen < 20
-    const lowP = reading.phosphorus !== null && reading.phosphorus !== undefined && reading.phosphorus < 10  
+    const critically_lowP = reading.phosphorus !== null && reading.phosphorus !== undefined && reading.phosphorus < 5
+    const lowP = reading.phosphorus !== null && reading.phosphorus !== undefined && reading.phosphorus < 15  
+    const critically_lowK = reading.potassium !== null && reading.potassium !== undefined && reading.potassium < 30
     const lowK = reading.potassium !== null && reading.potassium !== undefined && reading.potassium < 50
 
-    if (lowN && lowP && lowK) {
+    // Handle critical deficiencies first
+    if (critically_lowP) {
+      fertilizingRec = {
+        recommendation: 'now',
+        daysUntilNext: 0,
+        reason: 'Severe phosphorus deficiency detected',
+        type: 'phosphorus',
+        urgency: 'critical'
+      }
+    } else if (critically_lowN) {
+      fertilizingRec = {
+        recommendation: 'now',
+        daysUntilNext: 0,
+        reason: 'Severe nitrogen deficiency detected',
+        type: 'nitrogen',
+        urgency: 'critical'
+      }
+    } else if (critically_lowK) {
+      fertilizingRec = {
+        recommendation: 'soon',
+        daysUntilNext: 1,
+        reason: 'Severe potassium deficiency detected',
+        type: 'potassium',
+        urgency: 'critical'
+      }
+    }
+    // Handle multiple nutrient deficiencies
+    else if (lowN && lowP && lowK) {
       fertilizingRec = {
         recommendation: 'soon',
         daysUntilNext: 2,
@@ -375,11 +424,11 @@ Please respond with EXACTLY this JSON format (no additional text):
       }
     } else if (lowP) {
       fertilizingRec = {
-        recommendation: 'later',
-        daysUntilNext: 7,
-        reason: 'Phosphorus could be improved',
+        recommendation: 'soon',
+        daysUntilNext: 3,
+        reason: 'Phosphorus levels are low',
         type: 'phosphorus',
-        urgency: 'low'
+        urgency: 'medium'
       }
     } else if (lowK) {
       fertilizingRec = {

@@ -197,11 +197,11 @@ export default function RodCard({ id, rodId, temperature, moisture, ph, conducti
                         </span>
                       </div>
                       <div className="text-xs text-gray-600">{suggestions.watering.reason}</div>
-                      {suggestions.watering.hoursUntilNext > 0 && (
-                        <div className="text-xs text-blue-600 mt-1">
-                          Water in: {suggestions.watering.hoursUntilNext}h
-                        </div>
-                      )}
+                      <div className="text-xs text-blue-600 mt-1">
+                        {suggestions.watering.hoursUntilNext === 0 
+                          ? "Water now" 
+                          : `Water in: ${suggestions.watering.hoursUntilNext}h`}
+                      </div>
                     </div>
 
                     {/* Fertilizing Suggestion */}
@@ -213,11 +213,11 @@ export default function RodCard({ id, rodId, temperature, moisture, ph, conducti
                         </span>
                       </div>
                       <div className="text-xs text-gray-600">{suggestions.fertilizing.reason}</div>
-                      {suggestions.fertilizing.daysUntilNext > 0 && (
-                        <div className="text-xs text-green-600 mt-1">
-                          Fertilize in: {suggestions.fertilizing.daysUntilNext}d
-                        </div>
-                      )}
+                      <div className="text-xs text-green-600 mt-1">
+                        {suggestions.fertilizing.daysUntilNext === 0 
+                          ? "Fertilize now" 
+                          : `Fertilize in: ${suggestions.fertilizing.daysUntilNext}d`}
+                      </div>
                     </div>
 
                     {/* Plant Health Score */}

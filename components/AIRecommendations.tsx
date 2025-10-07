@@ -168,7 +168,11 @@ export default function AIRecommendations({ farmId }: AIRecommendationsProps) {
                   {prediction.watering.urgency.toUpperCase()}
                 </div>
                 <p className="text-sm text-gray-700 mb-1">
-                  Next watering in: <strong>{prediction.watering.hoursUntilNext}h</strong>
+                  <strong>
+                    {prediction.watering.hoursUntilNext === 0 
+                      ? "Water now" 
+                      : `Next watering in: ${prediction.watering.hoursUntilNext}h`}
+                  </strong>
                 </p>
                 <p className="text-xs text-gray-600">{prediction.watering.reason}</p>
               </div>
@@ -180,7 +184,11 @@ export default function AIRecommendations({ farmId }: AIRecommendationsProps) {
                   {prediction.fertilization.urgency.toUpperCase()}
                 </div>
                 <p className="text-sm text-gray-700 mb-1">
-                  Next fertilization in: <strong>{prediction.fertilization.daysUntilNext}d</strong>
+                  <strong>
+                    {prediction.fertilization.daysUntilNext === 0 
+                      ? "Fertilize now" 
+                      : `Next fertilization in: ${prediction.fertilization.daysUntilNext}d`}
+                  </strong>
                 </p>
                 <p className="text-xs text-gray-600 mb-1">
                   NPK Ratio: N:{Math.round(prediction.fertilization.npkRatio.n)} P:{Math.round(prediction.fertilization.npkRatio.p)} K:{Math.round(prediction.fertilization.npkRatio.k)}

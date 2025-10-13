@@ -84,7 +84,12 @@ export async function POST(
       
       // Find or create secondary rod
       let secondaryRod = await prisma.secondaryRod.findUnique({
-        where: { rodId: rodId }
+        where: { 
+          rodId_mainRodId: {
+            rodId: rodId,
+            mainRodId: mainRod.id
+          }
+        }
       })
 
       if (!secondaryRod) {
@@ -113,12 +118,6 @@ export async function POST(
           }
         })
       } else {
-        // Verify it belongs to this main rod
-        if (secondaryRod.mainRodId !== mainRod.id) {
-          console.error(`Rod ${rodId} belongs to different main rod`)
-          continue // Skip this reading
-        }
-
         // Update last seen (will be updated below with battery if provided)
         if (reading.battery === undefined) {
           await prisma.secondaryRod.update({

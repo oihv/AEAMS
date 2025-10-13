@@ -18,39 +18,55 @@ export async function GET(
 
     const { rodId } = await params
 
-    // Find the secondary rod and verify user access
-    const secondaryRod = await prisma.secondaryRod.findUnique({
-      where: { rodId },
+    // Find the secondary rod through user's farms (since rodId is no longer globally unique)
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email },
       include: {
-        mainRod: {
+        farms: {
           include: {
-            farm: {
+            mainRod: {
               include: {
-                user: true
+                secondaryRods: {
+                  where: { rodId },
+                  include: {
+                    readings: {
+                      orderBy: { timestamp: 'desc' },
+                      take: 50 // Get recent readings for analysis
+                    }
+                  }
+                }
               }
             }
           }
-        },
-        readings: {
-          orderBy: { timestamp: 'desc' },
-          take: 50 // Get recent readings for analysis
         }
       }
     })
 
-    if (!secondaryRod) {
+    if (!user) {
       return NextResponse.json(
-        { error: "Rod not found" },
+        { error: "User not found" },
         { status: 404 }
       )
     }
 
-    // Verify user owns this rod through farm ownership
-    const userEmail = session.user.email
-    if (!secondaryRod.mainRod?.farm?.user || secondaryRod.mainRod.farm.user.email !== userEmail) {
+    // Find the secondary rod across all user's farms
+    let secondaryRod = null
+    let farm = null
+    for (const userFarm of user.farms) {
+      if (userFarm.mainRod?.secondaryRods) {
+        const foundRod = userFarm.mainRod.secondaryRods.find(rod => rod.rodId === rodId)
+        if (foundRod) {
+          secondaryRod = foundRod
+          farm = userFarm
+          break
+        }
+      }
+    }
+
+    if (!secondaryRod || !farm) {
       return NextResponse.json(
-        { error: "Access denied" },
-        { status: 403 }
+        { error: "Rod not found" },
+        { status: 404 }
       )
     }
 

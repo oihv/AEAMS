@@ -74,7 +74,7 @@ export default function RodCard({ id, rodId, temperature, moisture, ph, conducti
         if (value < 15) return 'text-red-600'  // Critical
         if (value < 25) return 'text-yellow-600'  // Medium warning
         if (value >= 75) return 'text-green-600'  // Good
-        return 'text-white'  // Default
+        return 'text-gray-600'  // Default
       default:
         return 'text-gray-600'
     }

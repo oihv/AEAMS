@@ -18,19 +18,23 @@ export async function GET(
 
     const { rodId } = params
 
-    // Find the secondary rod and its farm
-    const secondaryRod = await prisma.secondaryRod.findUnique({
-      where: { rodId },
+    // Find the secondary rod through user's farms (since rodId is no longer globally unique)
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email },
       include: {
-        readings: {
-          orderBy: { timestamp: 'desc' },
-          take: 1 // Get only the latest reading
-        },
-        mainRod: {
+        farms: {
           include: {
-            farm: {
+            mainRod: {
               include: {
-                user: true
+                secondaryRods: {
+                  where: { rodId },
+                  include: {
+                    readings: {
+                      orderBy: { timestamp: 'desc' },
+                      take: 1 // Get only the latest reading
+                    }
+                  }
+                }
               }
             }
           }
@@ -38,18 +42,31 @@ export async function GET(
       }
     })
 
-    if (!secondaryRod) {
+    if (!user) {
       return NextResponse.json(
-        { error: "Rod not found" },
+        { error: "User not found" },
         { status: 404 }
       )
     }
 
-    // Verify user ownership
-    if (secondaryRod.mainRod?.farm?.user?.email !== session.user.email) {
+    // Find the secondary rod across all user's farms
+    let secondaryRod = null
+    let farm = null
+    for (const userFarm of user.farms) {
+      if (userFarm.mainRod?.secondaryRods) {
+        const foundRod = userFarm.mainRod.secondaryRods.find(rod => rod.rodId === rodId)
+        if (foundRod) {
+          secondaryRod = foundRod
+          farm = userFarm
+          break
+        }
+      }
+    }
+
+    if (!secondaryRod || !farm) {
       return NextResponse.json(
-        { error: "Access denied" },
-        { status: 403 }
+        { error: "Rod not found" },
+        { status: 404 }
       )
     }
 
@@ -63,7 +80,7 @@ export async function GET(
     }
 
     // Get plant type from farm
-    const plantType = secondaryRod.mainRod?.farm?.plantType || 'Unknown'
+    const plantType = farm.plantType || 'Unknown'
 
     // Get cached or generate AI suggestions
     const result = await AISuggestionService.getOrCreateSuggestions(

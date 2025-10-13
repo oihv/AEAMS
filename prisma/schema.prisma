@@ -97,7 +97,7 @@ model MainRod {
 
 model SecondaryRod {
   id            String         @id @default(cuid())
-  rodId         String         @unique @map("rod_id") // Production ID
+  rodId         String         @map("rod_id") // Production ID
   name          String?
   location      String?
   mainRodId     String         @map("main_rod_id")
@@ -112,6 +112,7 @@ model SecondaryRod {
   createdAt     DateTime       @default(now()) @map("created_at")
   updatedAt     DateTime       @updatedAt @map("updated_at")
 
+  @@unique([rodId, mainRodId])
   @@map("secondary_rods")
 }
 

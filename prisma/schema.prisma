@@ -104,6 +104,7 @@ model SecondaryRod {
   mainRod       MainRod        @relation(fields: [mainRodId], references: [id], onDelete: Cascade)
   isActive      Boolean        @default(true) @map("is_active")
   lastSeen      DateTime?      @map("last_seen")
+  battery       Float?         // Battery percentage (0-100)
   positionX     Float?         @map("position_x") // X coordinate for map view
   positionY     Float?         @map("position_y") // Y coordinate for map view
   readings      Reading[]
@@ -125,6 +126,7 @@ model Reading {
   nitrogen       Float?        @map("n")
   phosphorus     Float?        @map("p")
   potassium      Float?        @map("k")
+  battery        Float?        // Battery percentage (0-100)
   timestamp      DateTime      @default(now())
   aiSuggestion   AISuggestion? // One-to-one relation
 

@@ -206,16 +206,17 @@ export default function FarmDetails({ initialFarm }: FarmDetailsProps) {
                 const latestReading = rod.readings?.[0]
                 const rodDisplayId = rod.rodId || rod.name || `Rod ${index + 1}`
                 
-                // Check if rod has any sensor data
-                const hasSensorData = !!latestReading && (
-                  latestReading.temperature !== null ||
-                  latestReading.moisture !== null ||
-                  latestReading.ph !== null ||
-                  latestReading.conductivity !== null ||
-                  latestReading.nitrogen !== null ||
-                  latestReading.phosphorus !== null ||
-                  latestReading.potassium !== null
-                )
+                 // Check if rod has any sensor data
+                 const hasSensorData = !!latestReading && (
+                   latestReading.temperature !== null ||
+                   latestReading.moisture !== null ||
+                   latestReading.ph !== null ||
+                   latestReading.conductivity !== null ||
+                   latestReading.nitrogen !== null ||
+                   latestReading.phosphorus !== null ||
+                   latestReading.potassium !== null
+                   || (latestReading as any).battery !== null 
+                 )
                 
                 // Check if this rod has recent data (within 5 minutes of the newest timestamp)
                 let rodTimestamp = 0
@@ -235,21 +236,22 @@ export default function FarmDetails({ initialFarm }: FarmDetailsProps) {
                 const hasValidData = hasSensorData && hasRecentData
                 
                 
-                return {
-                  id: rodDisplayId,
-                  rodId: rod.rodId, // Include database rodId for position persistence
-                  positionX: rod.positionX, // Include position data
-                  positionY: rod.positionY, // Include position data
-                  temperature: latestReading?.temperature || 0,
-                  moisture: latestReading?.moisture || 0,
-                  ph: latestReading?.ph || 0,
-                  conductivity: latestReading?.conductivity || 0,
-                  n: latestReading?.nitrogen || 0,
-                  p: latestReading?.phosphorus || 0,
-                  k: latestReading?.potassium || 0,
-                  timestamp: latestReading?.timestamp || null,
-                  hasValidData: hasValidData
-                } as RodCardProps & { positionX?: number | null; positionY?: number | null }
+                 return {
+                   id: rodDisplayId,
+                   rodId: rod.rodId, // Include database rodId for position persistence
+                   positionX: rod.positionX, // Include position data
+                   positionY: rod.positionY, // Include position data
+                   temperature: latestReading?.temperature || 0,
+                   moisture: latestReading?.moisture || 0,
+                   ph: latestReading?.ph || 0,
+                   conductivity: latestReading?.conductivity || 0,
+                   n: latestReading?.nitrogen || 0,
+                   p: latestReading?.phosphorus || 0,
+                   k: latestReading?.potassium || 0,
+                   battery: (rod as any).battery || (latestReading as any)?.battery || undefined, // Temporarily disabled until migration is run
+                   timestamp: latestReading?.timestamp || null,
+                   hasValidData: hasValidData
+                 } as RodCardProps & { positionX?: number | null; positionY?: number | null }
               })
               
               return <RodGrid rods={rodData} />

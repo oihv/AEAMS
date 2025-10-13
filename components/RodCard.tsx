@@ -13,17 +13,18 @@ export type RodCardProps = {
   n: number;
   p: number;
   k: number;
+  battery?: number; // Battery percentage (0-100)
   timestamp: Date | null;
   hasValidData?: boolean;
   isEditMode?: boolean;
 };
 
-export default function RodCard({ id, rodId, temperature, moisture, ph, conductivity, n, p, k, timestamp, hasValidData = true, isEditMode = false }: RodCardProps) {
+export default function RodCard({ id, rodId, temperature, moisture, ph, conductivity, n, p, k, battery, timestamp, hasValidData = true, isEditMode = false }: RodCardProps) {
   const [suggestions, setSuggestions] = useState<AISuggestion | null>(null)
   const [loadingSuggestions, setLoadingSuggestions] = useState(false)
   const [showSuggestions, setShowSuggestions] = useState(false)
   // Create a data signature to detect changes in sensor values
-  const dataSignature = `${temperature}-${moisture}-${ph}-${conductivity}-${n}-${p}-${k}-${timestamp ? new Date(timestamp).getTime() : 'null'}`
+  const dataSignature = `${temperature}-${moisture}-${ph}-${conductivity}-${n}-${p}-${k}-${battery || 'null'}-${timestamp ? new Date(timestamp).getTime() : 'null'}`
   
   // Fetch AI suggestions when rod has valid data or when data changes
   useEffect(() => {
@@ -69,10 +70,17 @@ export default function RodCard({ id, rodId, temperature, moisture, ph, conducti
       case 'temperature':
         if (value < 20 || value > 35) return 'text-orange-600'
         return 'text-green-600'
+      case 'battery':
+        if (value < 15) return 'text-red-600'  // Critical
+        if (value < 25) return 'text-yellow-600'  // Medium warning
+        if (value >= 75) return 'text-green-600'  // Good
+        return 'text-white'  // Default
       default:
         return 'text-gray-600'
     }
   }
+
+
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-md transition-shadow">
@@ -119,6 +127,15 @@ export default function RodCard({ id, rodId, temperature, moisture, ph, conducti
             {conductivity.toFixed(1)} mS/cm
           </span>
         </div>
+
+        {battery !== undefined && battery !== null && (
+          <div className="flex justify-between">
+            <span className="text-gray-600">Battery:</span>
+            <span className={`font-medium ${getStatusColor(battery, 'battery')}`}>
+              {battery.toFixed(0)}%
+            </span>
+          </div>
+        )}
         
         <div className="pt-3 border-t border-gray-100">
           <div className="text-xs text-gray-500 mb-2">NPK Levels:</div>

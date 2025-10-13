@@ -13,6 +13,7 @@ interface RodDataRequest {
     nitrogen?: number
     phosphorus?: number
     potassium?: number
+    battery?: number
   }>
 }
 
@@ -118,10 +119,23 @@ export async function POST(
           continue // Skip this reading
         }
 
-        // Update last seen
+        // Update last seen (will be updated below with battery if provided)
+        if (reading.battery === undefined) {
+          await prisma.secondaryRod.update({
+            where: { id: secondaryRod.id },
+            data: { lastSeen: new Date() }
+          })
+        }
+      }
+
+      // Update secondary rod with battery info if provided
+      if (reading.battery !== undefined) {
         await prisma.secondaryRod.update({
           where: { id: secondaryRod.id },
-          data: { lastSeen: new Date() }
+          data: { 
+            lastSeen: new Date(),
+            battery: reading.battery
+          }
         })
       }
 
@@ -136,6 +150,7 @@ export async function POST(
           nitrogen: reading.nitrogen,
           phosphorus: reading.phosphorus,
           potassium: reading.potassium,
+          battery: reading.battery,
           timestamp: new Date()
         }
       })

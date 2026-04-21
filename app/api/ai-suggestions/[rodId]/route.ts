@@ -5,7 +5,7 @@ import { AISuggestionService } from "@/lib/ai-suggestions"
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { rodId: string } }
+  { params }: { params: Promise<{ rodId: string }> }
 ) {
   try {
     const session = await auth()
@@ -16,7 +16,7 @@ export async function GET(
       )
     }
 
-    const { rodId } = params
+    const { rodId } = await params
 
     // Find the secondary rod through user's farms (since rodId is no longer globally unique)
     const user = await prisma.user.findUnique({
